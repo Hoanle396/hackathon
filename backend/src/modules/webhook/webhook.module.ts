@@ -6,6 +6,7 @@ import { Project } from '../project/project.entity';
 import { ReviewModule } from '../review/review.module';
 import { AiModule } from '../ai/ai.module';
 import { TrainingModule } from '../training/training.module';
+import { DiscordModule } from '../discord/discord.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { TrainingModule } from '../training/training.module';
     ReviewModule,
     AiModule,
     TrainingModule,
+    DiscordModule,
   ],
   controllers: [WebhookController],
   providers: [WebhookService],

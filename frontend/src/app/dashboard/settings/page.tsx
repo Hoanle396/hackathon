@@ -119,6 +119,26 @@ export default function SettingsPage() {
                 </p>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="discordBotToken">
+                  Discord Bot Token
+                  {user?.hasDiscordBotToken && (
+                    <span className="ml-2 text-xs text-green-600">✓ Đã cấu hình</span>
+                  )}
+                </Label>
+                <Input
+                  id="discordBotToken"
+                  type="password"
+                  placeholder="your-discord-bot-token"
+                  {...register('discordBotToken')}
+                />
+                <p className="text-xs text-gray-500">
+                  Token bot Discord của bạn để gửi thông báo
+                  <br />
+                  Tạo bot tại: <a href="https://discord.com/developers/applications" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Discord Developer Portal</a>
+                </p>
+              </div>
+
               <Button type="submit" disabled={loading}>
                 <Save className="h-4 w-4 mr-2" />
                 {loading ? 'Đang lưu...' : 'Lưu Tokens'}

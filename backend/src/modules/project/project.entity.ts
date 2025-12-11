@@ -48,6 +48,9 @@ export class Project {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ nullable: true })
+  discordChannelId?: string;
+
   @ManyToOne(() => User, (user) => user.projects)
   @JoinColumn({ name: 'userId' })
   user: User;

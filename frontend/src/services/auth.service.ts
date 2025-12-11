@@ -14,6 +14,7 @@ export interface LoginData {
 export interface UpdateTokensData {
   githubToken?: string;
   gitlabToken?: string;
+  discordBotToken?: string;
 }
 
 export const authService = {

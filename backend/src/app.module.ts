@@ -9,6 +9,7 @@ import { ReviewModule } from './modules/review/review.module';
 import { WebhookModule } from './modules/webhook/webhook.module';
 import { AiModule } from './modules/ai/ai.module';
 import { TrainingModule } from './modules/training/training.module';
+import { DiscordModule } from './modules/discord/discord.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { TrainingModule } from './modules/training/training.module';
     WebhookModule,
     AiModule,
     TrainingModule,
+    DiscordModule,
   ],
 })
 export class AppModule {}

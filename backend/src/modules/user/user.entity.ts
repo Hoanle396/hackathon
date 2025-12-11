@@ -32,6 +32,10 @@ export class User {
   @Exclude()
   gitlabToken?: string;
 
+  @Column({ nullable: true })
+  @Exclude()
+  discordBotToken?: string;
+
   @Column({ default: true })
   isActive: boolean;
 

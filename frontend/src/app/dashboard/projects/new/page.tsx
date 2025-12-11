@@ -106,6 +106,18 @@ export default function NewProjectPage() {
               </p>
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="discordChannelId">Discord Channel ID (Optional)</Label>
+              <Input
+                id="discordChannelId"
+                placeholder="1234567890123456789"
+                {...register('discordChannelId')}
+              />
+              <p className="text-xs text-gray-500">
+                Nhập Channel ID của Discord để nhận thông báo về PR và review (cần cài đặt bot trước)
+              </p>
+            </div>
+
             <div className="flex items-center space-x-2">
               <input
                 id="autoReview"

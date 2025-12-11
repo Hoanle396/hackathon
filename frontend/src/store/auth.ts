@@ -7,6 +7,7 @@ interface User {
   fullName: string;
   hasGithubToken?: boolean;
   hasGitlabToken?: boolean;
+  hasDiscordBotToken?: boolean;
 }
 
 interface AuthState {

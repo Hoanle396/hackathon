@@ -9,6 +9,7 @@ export interface Project {
   reviewRules?: Record<string, any>;
   autoReview: boolean;
   isActive: boolean;
+  discordChannelId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -20,6 +21,7 @@ export interface CreateProjectData {
   businessContext?: string;
   reviewRules?: Record<string, any>;
   autoReview?: boolean;
+  discordChannelId?: string;
 }
 
 export interface UpdateProjectData {
@@ -28,6 +30,7 @@ export interface UpdateProjectData {
   reviewRules?: Record<string, any>;
   autoReview?: boolean;
   isActive?: boolean;
+  discordChannelId?: string;
 }
 
 export const projectService = {

@@ -20,6 +20,9 @@ export class CreateProjectDto {
   @IsOptional()
   @IsBoolean()
   autoReview?: boolean;
+
+  @IsOptional()
+  discordChannelId?: string;
 }
 
 export class UpdateProjectDto {
@@ -39,4 +42,7 @@ export class UpdateProjectDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  discordChannelId?: string;
 }

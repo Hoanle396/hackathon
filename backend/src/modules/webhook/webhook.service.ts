@@ -5,10 +5,12 @@ import { Project, ProjectType } from '../project/project.entity';
 import { ReviewService } from '../review/review.service';
 import { AiService } from '../ai/ai.service';
 import { TrainingService } from '../training/training.service';
+import { DiscordService } from '../discord/discord.service';
 import { ReviewStatus } from '../review/review.entity';
 import { CommentType } from '../review/review-comment.entity';
 import { Octokit } from '@octokit/rest';
 import { Gitlab } from '@gitbeaker/node';
+import { User } from '../user/user.entity';
 
 @Injectable()
 export class WebhookService {
@@ -20,6 +22,7 @@ export class WebhookService {
     private reviewService: ReviewService,
     private aiService: AiService,
     private trainingService: TrainingService,
+    private discordService: DiscordService,
   ) {}
 
   async handlePullRequestEvent(payload: any, source: 'github' | 'gitlab') {
@@ -41,6 +44,15 @@ export class WebhookService {
         return;
       }
 
+      // Load user for Discord bot token
+      await this.projectRepository.manager.getRepository('User').findOne({
+        where: { id: project.userId },
+      }).then((user: User) => {
+        if (user) {
+          project.user = user;
+        }
+      });
+
       // Tạo review record
       const review = await this.reviewService.createReview({
         projectId: project.id,
@@ -52,6 +64,21 @@ export class WebhookService {
         author: prData.author,
         filesChanged: prData.filesChanged,
       });
+
+      // Send Discord notification
+      const botToken = project.user?.discordBotToken;
+      if (this.discordService.isEnabled(botToken) && project.discordChannelId && botToken) {
+        await this.discordService.notifyPullRequest({
+          projectName: project.name,
+          pullRequestTitle: prData.title,
+          pullRequestUrl: prData.url,
+          author: prData.author,
+          branch: prData.branch,
+          filesChanged: prData.filesChanged?.length || 0,
+          additions: prData.filesChanged?.reduce((sum, f) => sum + (f.additions || 0), 0) || 0,
+          deletions: prData.filesChanged?.reduce((sum, f) => sum + (f.deletions || 0), 0) || 0,
+        }, botToken, project.discordChannelId);
+      }
 
       // Trigger AI review
       await this.performAiReview(review.id, project, prData);
@@ -206,12 +233,37 @@ export class WebhookService {
         reviewId,
         ReviewStatus.COMPLETED,
       );
+
+      // Send Discord notification for review completion
+      const botToken = project.user?.discordBotToken;
+      if (this.discordService.isEnabled(botToken) && project.discordChannelId && botToken) {
+        await this.discordService.notifyReviewComplete({
+          projectName: project.name,
+          pullRequestTitle: prData.title,
+          pullRequestUrl: prData.url,
+          totalComments: allComments.length,
+          status: 'success',
+        }, botToken, project.discordChannelId);
+      }
     } catch (error) {
       this.logger.error('AI review failed:', error);
       await this.reviewService.updateReviewStatus(
         reviewId,
         ReviewStatus.FAILED,
       );
+
+      // Send Discord notification for review failure
+      const botToken = project.user?.discordBotToken;
+      if (this.discordService.isEnabled(botToken) && project.discordChannelId && botToken) {
+        const review = await this.reviewService.findReviewById(reviewId);
+        await this.discordService.notifyReviewComplete({
+          projectName: project.name,
+          pullRequestTitle: review?.pullRequestTitle || 'Unknown',
+          pullRequestUrl: review?.pullRequestUrl || '',
+          totalComments: 0,
+          status: 'failed',
+        }, botToken, project.discordChannelId);
+      }
     }
   }
 

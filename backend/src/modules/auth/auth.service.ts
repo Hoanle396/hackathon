@@ -77,6 +77,10 @@ export class AuthService {
       user.gitlabToken = updateTokensDto.gitlabToken;
     }
 
+    if (updateTokensDto.discordBotToken) {
+      user.discordBotToken = updateTokensDto.discordBotToken;
+    }
+
     await this.userRepository.save(user);
 
     return { message: 'Tokens updated successfully' };
@@ -89,11 +93,12 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    const { password, githubToken, gitlabToken, ...result } = user;
+    const { password, githubToken, gitlabToken, discordBotToken, ...result } = user;
     return {
       ...result,
       hasGithubToken: !!githubToken,
       hasGitlabToken: !!gitlabToken,
+      hasDiscordBotToken: !!discordBotToken,
     };
   }
 }

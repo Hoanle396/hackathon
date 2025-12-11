@@ -46,7 +46,8 @@
     "typeorm": "^0.3.17",
     "openai": "^4.20.1",
     "@anthropic-ai/sdk": "^0.9.1",
-    "@gitbeaker/node": "^35.8.1"
+    "@gitbeaker/node": "^35.8.1",
+    "discord.js": "^14.14.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",

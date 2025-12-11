@@ -52,4 +52,12 @@ export class UpdateTokensDto {
   })
   @IsOptional()
   gitlabToken?: string;
+
+  @ApiProperty({
+    example: 'your-discord-bot-token',
+    description: 'Discord Bot Token for notifications',
+    required: false,
+  })
+  @IsOptional()
+  discordBotToken?: string;
 }
