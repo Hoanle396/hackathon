@@ -6,6 +6,8 @@ import {
   TrainingData,
   TrainingDataType,
 } from '../training/training-data.entity';
+import type OpenRouter  from '@openrouter/sdk';
+import { dynamicImport } from '@/utils';
 
 interface CodeReviewContext {
   businessContext?: string;
@@ -14,6 +16,9 @@ interface CodeReviewContext {
   fileName: string;
   pullRequestTitle?: string;
   pullRequestDescription?: string;
+  fileStatus?: string;
+  additions?: number;
+  deletions?: number;
 }
 
 interface TrainingExample {
@@ -34,11 +39,17 @@ export class AiService {
     private trainingDataRepository: Repository<TrainingData>,
   ) {
     this.openaiApiKey = this.configService.get('OPENAI_API_KEY');
-    this.anthropicApiKey = this.configService.get('ANTHROPIC_API_KEY');
   }
-
   async reviewCode(context: CodeReviewContext): Promise<string[]> {
-    const { businessContext, reviewRules, codeSnippet, fileName } = context;
+    const { 
+      businessContext, 
+      reviewRules, 
+      codeSnippet, 
+      fileName,
+      fileStatus,
+      additions,
+      deletions,
+    } = context;
 
     // Lấy training data liên quan
     const trainingExamples = await this.getRelevantTrainingData(
@@ -51,71 +62,118 @@ export class AiService {
       trainingExamples,
     );
 
-    const userPrompt = `
-Hãy review đoạn code sau từ file: ${fileName}
+    // Build context about the change
+    let changeContext = '';
+    if (fileStatus === 'added') {
+      changeContext = 'This is a NEW file being added.';
+    } else if (fileStatus === 'modified') {
+      changeContext = `This file is being MODIFIED (${additions || 0} additions, ${deletions || 0} deletions).`;
+    } else if (fileStatus === 'renamed') {
+      changeContext = 'This file is being RENAMED.';
+    }
 
-\`\`\`
+    // Detect if this is a diff/patch format
+    const isDiff = codeSnippet.includes('@@') && (codeSnippet.includes('+++') || codeSnippet.includes('---'));
+
+    const userPrompt = `
+Review the following code changes from file: **${fileName}**
+
+${changeContext}
+
+${isDiff ? '**Git Diff:**' : '**Full File Content:**'}
+\`\`\`diff
 ${codeSnippet}
 \`\`\`
 
-Yêu cầu:
-1. Phân tích kỹ thuật và logic
-2. Kiểm tra theo business context đã cung cấp
-3. Đề xuất cải thiện cụ thể
-4. Chỉ ra lỗi tiềm ẩn và security issues
-5. Comment phải súc tích, rõ ràng, và có thể action được
+${context.pullRequestTitle ? `**PR Title:** ${context.pullRequestTitle}` : ''}
+${context.pullRequestDescription ? `**PR Description:** ${context.pullRequestDescription}` : ''}
 
-Format: Mỗi issue trên một dòng, bắt đầu bằng emoji tương ứng:
-🐛 Bug hoặc lỗi logic
-⚠️ Warning hoặc code smell
-💡 Suggestion để cải thiện
-🔒 Security issue
-📝 Business logic issue
+**Requirements:**
+1. Focus on the CHANGED LINES (lines starting with + in diff)
+2. Check technical correctness and logic
+3. Verify against business context if provided
+4. Identify potential bugs, security issues, and code smells
+5. Suggest specific, actionable improvements
+6. Be concise and clear
+
+**Format:** Each issue on a separate line with appropriate emoji:
+🐛 Bugs or logic errors
+⚠️ Warnings or code smells  
+💡 Suggestions for improvement
+🔒 Security issues
+📝 Business logic concerns
+✨ Best practice recommendations
+
+**Important:** 
+- Only comment on ACTUAL issues, don't create generic comments
+- Be specific about line numbers and code snippets when possible
+- If the code looks good, say "✅ Code looks good, no issues found"
 `;
 
-    // Gọi AI API (giả lập - bạn cần implement thật với OpenAI hoặc Anthropic)
+    // Gọi AI API
     const comments = await this.callAiApi(systemPrompt, userPrompt);
 
     return comments;
-  }
-
+  } 
   private buildSystemPrompt(
     businessContext?: string,
     reviewRules?: Record<string, any>,
     trainingExamples?: TrainingExample[],
   ): string {
-    let prompt = `Bạn là một AI Code Reviewer chuyên nghiệp. Nhiệm vụ của bạn là review code một cách chi tiết, chính xác và hữu ích.
+    let prompt = `You are a professional AI Code Reviewer. Your task is to review code thoroughly, accurately, and helpfully.
+
+**Your expertise includes:**
+- Identifying bugs, security vulnerabilities, and performance issues
+- Suggesting best practices and design patterns
+- Checking code quality, readability, and maintainability
+- Understanding business logic and context
+
+**Review principles:**
+- Be constructive and specific
+- Focus on important issues, not nitpicking
+- Provide actionable suggestions with examples
+- Consider the context and purpose of the code
+- Balance thoroughness with practicality
 
 `;
 
     if (businessContext) {
-      prompt += `BUSINESS CONTEXT:
+      prompt += `**BUSINESS CONTEXT:**
 ${businessContext}
+
+Please ensure code changes align with this business context.
 
 `;
     }
 
     if (reviewRules) {
-      prompt += `REVIEW RULES:
+      prompt += `**PROJECT-SPECIFIC REVIEW RULES:**
 ${JSON.stringify(reviewRules, null, 2)}
+
+These are custom rules for this project. Pay special attention to these.
 
 `;
     }
 
     if (trainingExamples && trainingExamples.length > 0) {
-      prompt += `HỌC TỪ CÁC REVIEW TRƯỚC:
+      prompt += `**LEARNING FROM PREVIOUS REVIEWS:**
+Here are examples of good reviews from this project:
+
 `;
       trainingExamples.slice(0, 5).forEach((example, index) => {
         prompt += `
 Example ${index + 1}:
-Code: ${example.codeSnippet}
+Code: ${example.codeSnippet.substring(0, 200)}...
 AI Comment: ${example.aiComment}
 `;
         if (example.correctedComment) {
-          prompt += `Corrected: ${example.correctedComment}
+          prompt += `User Correction: ${example.correctedComment}
 `;
         }
       });
+      prompt += `
+Learn from these examples to provide better reviews for this project.
+`;
     }
 
     return prompt;
@@ -150,34 +208,40 @@ AI Comment: ${example.aiComment}
     // Đây là mock response
 
     try {
-      // Example với OpenAI (uncomment khi có API key)
-      /*
-      const OpenAI = require('openai');
-      const openai = new OpenAI({ apiKey: this.openaiApiKey });
-      
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4",
+      const openRouterModule = await dynamicImport<typeof OpenRouter>('@openrouter/sdk');
+
+      const openRouter = new openRouterModule.OpenRouter({
+        apiKey: this.configService.get('OPENROUTER_API_KEY'),
+
+      });
+
+      const completion = await openRouter.chat.send({
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
         ],
         temperature: 0.7,
+        stream: false,
       });
-      
-      const response = completion.choices[0].message.content;
-      return response.split('\n').filter(line => line.trim());
-      */
 
-      // Mock response cho demo
-      return [
-        '🐛 Thiếu error handling khi gọi API external',
-        '⚠️ Function này quá dài, nên chia nhỏ thành các function con',
-        '💡 Có thể optimize query bằng cách sử dụng index',
-        '🔒 Input không được validate, có thể dẫn đến SQL injection',
-      ];
+      const response = completion.choices[0].message.content;
+      console.log('AI API response:', response);
+      
+      // Split response into multiple comments if needed
+      const comments = (response as string)
+        .split('\n')
+        .filter(line => line.trim().length > 0)
+        .filter(line => {
+          // Only keep lines that start with emoji or are continuations
+          const emojiPattern = /^[\u{1F300}-\u{1F9FF}]|^[⚠️🐛💡🔒📝✨✅]/u;
+          return emojiPattern.test(line.trim());
+        });
+
+      return comments.length > 0 ? comments : [response as string];
     } catch (error) {
       console.error('AI API call failed:', error);
-      return ['⚠️ Không thể analyze code lúc này, vui lòng thử lại sau'];
+      return ['⚠️ Unable to analyze code at this time. Please try again later.'];
     }
   }
 
@@ -185,17 +249,25 @@ AI Comment: ${example.aiComment}
     userComment: string,
     context: CodeReviewContext,
   ): Promise<string> {
-    const systemPrompt = `Bạn là AI Code Reviewer. Hãy trả lời comment của user một cách chuyên nghiệp, hữu ích và lịch sự.`;
+    const systemPrompt = `You are an AI Code Reviewer assistant. Reply to user comments professionally, helpfully, and respectfully.
+
+Guidelines:
+- Be humble and open to feedback
+- Provide clear explanations when asked
+- Acknowledge if you made a mistake
+- Offer alternative solutions when appropriate
+- Keep responses concise but thorough`;
 
     const userPrompt = `
-User comment: ${userComment}
+**User's comment:** ${userComment}
 
-Code context:
+**Code context:**
+File: ${context.fileName}
 \`\`\`
 ${context.codeSnippet}
 \`\`\`
 
-Hãy đưa ra câu trả lời phù hợp, giải thích rõ ràng nếu cần.
+Provide an appropriate response. If the user is correcting you or providing feedback, acknowledge it and learn from it. If they're asking for clarification, explain clearly.
 `;
 
     const replies = await this.callAiApi(systemPrompt, userPrompt);

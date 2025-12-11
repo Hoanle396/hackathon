@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import  * as tunnel from 'localtunnel'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -65,6 +66,17 @@ async function bootstrap() {
     `🚀 Application is running on: http://localhost:${port}/${apiPrefix}`,
   );
   console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
+
+  (async () => {
+    const tunnelInstance = await tunnel({ port , subdomain: 'ai-code-reviewer' });
+    // the assigned public url for your tunnel
+    console.log(`Tunnel started at: ${tunnelInstance.url}`);
+
+    tunnelInstance.on('close', () => {
+    });
+  })();
 }
+
+
 
 bootstrap();

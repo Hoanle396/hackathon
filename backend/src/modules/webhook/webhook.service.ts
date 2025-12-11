@@ -29,6 +29,7 @@ export class WebhookService {
     try {
       const prData = this.extractPullRequestData(payload, source);
 
+      console.log(prData);
       if (prData.action !== 'opened' && prData.action !== 'synchronize') {
         return;
       }
@@ -186,29 +187,38 @@ export class WebhookService {
       const allComments = [];
 
       for (const file of fileContents) {
+        // Use patch (diff) for review if available, otherwise use full content
+        const codeToReview = file.patch || file.content;
+        
         const comments = await this.aiService.reviewCode({
           businessContext: project.businessContext,
           reviewRules: project.reviewRules,
-          codeSnippet: file.content,
+          codeSnippet: codeToReview,
           fileName: file.filename,
           pullRequestTitle: prData.title,
           pullRequestDescription: prData.description,
+          fileStatus: file.status,
+          additions: file.additions,
+          deletions: file.deletions,
         });
 
         for (const comment of comments) {
           allComments.push({
             file: file.filename,
             comment,
+            additions: file.additions,
+            deletions: file.deletions,
           });
 
           // Post comment lên GitHub/GitLab
           await this.postComment(
             project,
-            prData.pullRequestId,
+            prData.pullRequestNumber.toString(),
             comment,
             file.filename,
             null,
             project.type === ProjectType.GITHUB ? 'github' : 'gitlab',
+            prData.commitSha,
           );
 
           // Save comment
@@ -268,12 +278,119 @@ export class WebhookService {
   }
 
   private async fetchFileContents(project: Project, prData: any) {
-    // TODO: Implement fetch file contents từ GitHub/GitLab API
-    // Mock data
-    return prData.filesChanged.map((file) => ({
-      filename: file.filename,
-      content: `// Mock content for ${file.filename}`,
-    }));
+    try {
+      if (project.type === ProjectType.GITHUB) {
+        return await this.fetchGithubFileContents(project, prData);
+      } else {
+        return await this.fetchGitlabFileContents(project, prData);
+      }
+    } catch (error) {
+      this.logger.error('Error fetching file contents:', error);
+      return [];
+    }
+  }
+
+  private async fetchGithubFileContents(project: Project, prData: any) {
+    const octokit = new Octokit({
+      auth: project.user.githubToken,
+    });
+
+    const [owner, repo] = this.parseGithubUrl(project.repositoryUrl);
+
+    // Get list of files changed in PR
+    const { data: files } = await octokit.pulls.listFiles({
+      owner,
+      repo,
+      pull_number: prData.pullRequestNumber,
+    });
+
+    const fileContents = [];
+
+    for (const file of files) {
+      // Skip deleted files and very large files
+      if (file.status === 'removed' || file.changes > 500) {
+        continue;
+      }
+
+      try {
+        // Get file diff/patch
+        const patch = file.patch || '';
+        
+        // Get full file content from head commit
+        const { data: fileData } = await octokit.repos.getContent({
+          owner,
+          repo,
+          path: file.filename,
+          ref: prData.commitSha,
+        });
+
+        let content = '';
+        if ('content' in fileData && fileData.content) {
+          content = Buffer.from(fileData.content, 'base64').toString('utf-8');
+        }
+
+        fileContents.push({
+          filename: file.filename,
+          content,
+          patch,
+          additions: file.additions,
+          deletions: file.deletions,
+          changes: file.changes,
+          status: file.status,
+        });
+      } catch (error) {
+        this.logger.warn(`Failed to fetch content for ${file.filename}:`, error.message);
+      }
+    }
+
+    return fileContents;
+  }
+
+  private async fetchGitlabFileContents(project: Project, prData: any) {
+    console.log( project.user.gitlabToken)
+    const api = new Gitlab({
+      host: !project.repositoryUrl.includes('gitlab.com') ? 'https://gitlab.var-meta.com' : undefined,
+      token: project.user.gitlabToken,
+    });
+
+    const projectId = prData.projectId || this.parseGitlabUrl(project.repositoryUrl);
+
+    // Get merge request changes
+    const changes = await api.MergeRequests.changes(projectId, prData.pullRequestNumber);
+
+    const fileContents = [];
+
+    for (const file of changes.changes || []) {
+      // Skip deleted files
+      if (file.deleted_file) {
+        continue;
+      }
+
+      try {
+        // Get file content
+        const fileContent = await api.RepositoryFiles.show(
+          projectId,
+          file.new_path,
+          prData.commitSha || 'HEAD',
+        );
+
+        const content = Buffer.from(fileContent.content, 'base64').toString('utf-8');
+
+        fileContents.push({
+          filename: file.new_path,
+          content,
+          patch: file.diff,
+          additions: 0, // GitLab doesn't provide this directly in the diff
+          deletions: 0,
+          changes: 0,
+          status: file.new_file ? 'added' : 'modified',
+        });
+      } catch (error) {
+        this.logger.warn(`Failed to fetch content for ${file.new_path}:`, error.message);
+      }
+    }
+
+    return fileContents;
   }
 
   private async postComment(
@@ -283,6 +400,7 @@ export class WebhookService {
     filePath: string,
     lineNumber: number | null,
     source: 'github' | 'gitlab',
+    commitSha?: string,
   ) {
     try {
       if (source === 'github') {
@@ -293,19 +411,31 @@ export class WebhookService {
         // Parse repository URL
         const [owner, repo] = this.parseGithubUrl(project.repositoryUrl);
 
-        await octokit.pulls.createReviewComment({
-          owner,
-          repo,
-          pull_number: parseInt(pullRequestId),
-          body: comment,
-          path: filePath,
-          ...(lineNumber && { line: lineNumber }),
-          side: 'RIGHT',
-          commit_id: 'HEAD',
-        });
+        // Create a review comment on the PR
+        if (lineNumber && commitSha) {
+          await octokit.pulls.createReviewComment({
+            owner,
+            repo,
+            pull_number: parseInt(pullRequestId),
+            body: comment,
+            path: filePath,
+            line: lineNumber,
+            side: 'RIGHT',
+            commit_id: commitSha,
+          });
+        } else {
+          // Post as general PR comment if no line number
+          await octokit.issues.createComment({
+            owner,
+            repo,
+            issue_number: parseInt(pullRequestId),
+            body: `**${filePath}**\n\n${comment}`,
+          });
+        }
       } else if (source === 'gitlab') {
         const api = new Gitlab({
           token: project.user.gitlabToken,
+          host: !project.repositoryUrl.includes('gitlab.com') ? 'https://gitlab.var-meta.com' : undefined,
         });
 
         // Parse project ID
@@ -334,11 +464,13 @@ export class WebhookService {
         branch: payload.pull_request.head.ref,
         author: payload.pull_request.user.login,
         repositoryUrl: payload.repository.html_url,
+        commitSha: payload.pull_request.head.sha,
+        baseSha: payload.pull_request.base.sha,
         filesChanged: payload.pull_request.changed_files || [],
       };
     } else {
       return {
-        action: payload.object_attributes.action,
+        action: payload.object_attributes.state === 'opened' ? 'opened' : 'synchronize',
         pullRequestId: payload.object_attributes.iid.toString(),
         pullRequestNumber: payload.object_attributes.iid,
         title: payload.object_attributes.title,
@@ -347,6 +479,9 @@ export class WebhookService {
         branch: payload.object_attributes.source_branch,
         author: payload.user.username,
         repositoryUrl: payload.project.web_url,
+        commitSha: payload.object_attributes.last_commit?.id,
+        baseSha: payload.object_attributes.target_branch,
+        projectId: payload.project.id,
         filesChanged: [],
       };
     }
@@ -384,7 +519,7 @@ export class WebhookService {
 
   private parseGitlabUrl(url: string): string {
     // Extract project ID or path from GitLab URL
-    const match = url.match(/gitlab\.com\/(.+)/);
+    const match = url.match(/gitlab\.var-meta\.com\/(.+)/);
     if (!match) throw new Error('Invalid GitLab URL');
     return match[1];
   }
