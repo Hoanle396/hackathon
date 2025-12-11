@@ -1,0 +1,66 @@
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+} from 'typeorm';
+import { User } from '../user/user.entity';
+import { Review } from '../review/review.entity';
+
+export enum ProjectType {
+  GITHUB = 'github',
+  GITLAB = 'gitlab',
+}
+
+@Entity('projects')
+export class Project {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column()
+  name: string;
+
+  @Column({ type: 'enum', enum: ProjectType })
+  type: ProjectType;
+
+  @Column()
+  repositoryUrl: string;
+
+  @Column({ nullable: true })
+  webhookUrl?: string;
+
+  @Column({ nullable: true })
+  webhookSecret?: string;
+
+  @Column({ type: 'text', nullable: true })
+  businessContext?: string;
+
+  @Column({ type: 'json', nullable: true })
+  reviewRules?: Record<string, any>;
+
+  @Column({ default: true })
+  autoReview: boolean;
+
+  @Column({ default: true })
+  isActive: boolean;
+
+  @ManyToOne(() => User, (user) => user.projects)
+  @JoinColumn({ name: 'userId' })
+  user: User;
+
+  @Column()
+  userId: string;
+
+  @OneToMany(() => Review, (review) => review.project)
+  reviews: Review[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+}
