@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Subscription, SubscriptionPlan, SubscriptionStatus } from './subscription.entity';
 import { Payment, PaymentStatus } from './payment.entity';
 import { CreateSubscriptionDto, UpdateSubscriptionDto } from './dto/subscription.dto';
+import { Web3PaymentService } from './web3-payment.service';
 
 const PLAN_PRICING = {
   [SubscriptionPlan.FREE]: {
@@ -39,6 +40,7 @@ export class SubscriptionService {
     private subscriptionRepository: Repository<Subscription>,
     @InjectRepository(Payment)
     private paymentRepository: Repository<Payment>,
+    private web3PaymentService: Web3PaymentService,
   ) {}
 
   async create(userId: string, createSubscriptionDto: CreateSubscriptionDto) {
@@ -49,8 +51,9 @@ export class SubscriptionService {
         : { userId },
     });
 
+    // If subscription exists, update it instead
     if (existing) {
-      throw new BadRequestException('Subscription already exists');
+      return await this.update(existing.id, createSubscriptionDto);
     }
 
     const planDetails = PLAN_PRICING[createSubscriptionDto.plan];
@@ -77,10 +80,35 @@ export class SubscriptionService {
   }
 
   async findByUser(userId: string) {
-    return await this.subscriptionRepository.findOne({
+    let subscription = await this.subscriptionRepository.findOne({
       where: { userId },
       relations: ['user'],
     });
+
+    // Auto-create FREE subscription for new users
+    if (!subscription) {
+      const planDetails = PLAN_PRICING[SubscriptionPlan.FREE];
+      const now = new Date();
+      const periodEnd = new Date(now);
+      periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+      subscription = this.subscriptionRepository.create({
+        userId,
+        plan: SubscriptionPlan.FREE,
+        price: planDetails.price,
+        maxProjects: planDetails.maxProjects,
+        maxMembers: planDetails.maxMembers,
+        monthlyReviewLimit: planDetails.monthlyReviewLimit,
+        currentPeriodStart: now,
+        currentPeriodEnd: periodEnd,
+        status: SubscriptionStatus.ACTIVE,
+        billingCycle: 'monthly',
+      });
+
+      subscription = await this.subscriptionRepository.save(subscription);
+    }
+
+    return subscription;
   }
 
   async findByTeam(teamId: string) {
@@ -106,6 +134,23 @@ export class SubscriptionService {
       subscription.maxProjects = planDetails.maxProjects;
       subscription.maxMembers = planDetails.maxMembers;
       subscription.monthlyReviewLimit = planDetails.monthlyReviewLimit;
+      
+      // Auto-activate for paid plans (demo mode - remove payment requirement)
+      if (updateSubscriptionDto.plan !== SubscriptionPlan.FREE) {
+        subscription.status = SubscriptionStatus.ACTIVE;
+        
+        // Update period dates
+        const now = new Date();
+        subscription.currentPeriodStart = now;
+        
+        const periodEnd = new Date(now);
+        if (subscription.billingCycle === 'yearly') {
+          periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+        } else {
+          periodEnd.setMonth(periodEnd.getMonth() + 1);
+        }
+        subscription.currentPeriodEnd = periodEnd;
+      }
     }
 
     if (updateSubscriptionDto.billingCycle) {
@@ -210,15 +255,123 @@ export class SubscriptionService {
     return { message: 'Monthly usage reset successfully' };
   }
 
-  async createPayment(subscriptionId: string, amount: number, metadata?: Record<string, any>) {
+  async createPayment(
+    subscriptionId: string,
+    amount: number,
+    walletAddress: string,
+    metadata?: Record<string, any>,
+  ) {
+    // Validate wallet address
+    if (!this.web3PaymentService.isValidAddress(walletAddress)) {
+      throw new BadRequestException('Invalid wallet address');
+    }
+
     const payment = this.paymentRepository.create({
       subscriptionId,
       amount,
+      currency: 'USDC',
       status: PaymentStatus.PENDING,
+      fromAddress: walletAddress,
+      toAddress: this.web3PaymentService.getReceiverAddress(),
       metadata,
     });
 
-    return await this.paymentRepository.save(payment);
+    const savedPayment = await this.paymentRepository.save(payment);
+
+    return {
+      payment: savedPayment,
+      receiverAddress: this.web3PaymentService.getReceiverAddress(),
+      supportedChains: this.web3PaymentService.getSupportedChains(),
+      amount: amount,
+    };
+  }
+
+  async verifyAndConfirmPayment(
+    paymentId: string,
+    transactionHash: string,
+    chainId: number,
+  ) {
+    const payment = await this.paymentRepository.findOne({
+      where: { id: paymentId },
+      relations: ['subscription'],
+    });
+
+    if (!payment) {
+      throw new NotFoundException('Payment not found');
+    }
+
+    if (payment.status === PaymentStatus.SUCCEEDED) {
+      throw new BadRequestException('Payment already confirmed');
+    }
+
+    try {
+      // Verify the blockchain transaction
+      const verification = await this.web3PaymentService.verifyPayment(
+        transactionHash,
+        payment.amount,
+        chainId,
+      );
+
+      if (!verification.isValid) {
+        payment.status = PaymentStatus.FAILED;
+        await this.paymentRepository.save(payment);
+        throw new BadRequestException('Payment verification failed');
+      }
+
+      // Update payment with blockchain details
+      payment.status = PaymentStatus.SUCCEEDED;
+      payment.transactionHash = verification.transactionHash;
+      payment.fromAddress = verification.from;
+      payment.toAddress = verification.to;
+      payment.chainId = verification.chainId;
+      payment.blockNumber = verification.blockNumber;
+      payment.metadata = {
+        ...payment.metadata,
+        verifiedAt: new Date().toISOString(),
+        blockTimestamp: verification.timestamp,
+      };
+
+      await this.paymentRepository.save(payment);
+
+      // Activate subscription
+      const subscription = await this.subscriptionRepository.findOne({
+        where: { id: payment.subscriptionId },
+      });
+
+      if (subscription) {
+        subscription.status = SubscriptionStatus.ACTIVE;
+        subscription.walletAddress = verification.from;
+        
+        // Update period dates
+        const now = new Date();
+        subscription.currentPeriodStart = now;
+        
+        const periodEnd = new Date(now);
+        if (subscription.billingCycle === 'yearly') {
+          periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+        } else {
+          periodEnd.setMonth(periodEnd.getMonth() + 1);
+        }
+        subscription.currentPeriodEnd = periodEnd;
+
+        await this.subscriptionRepository.save(subscription);
+      }
+
+      return {
+        success: true,
+        payment,
+        verification,
+      };
+    } catch (error) {
+      payment.status = PaymentStatus.FAILED;
+      payment.metadata = {
+        ...payment.metadata,
+        error: error.message,
+        failedAt: new Date().toISOString(),
+      };
+      await this.paymentRepository.save(payment);
+      throw error;
+    }
   }
 
   async getPaymentHistory(subscriptionId: string) {

@@ -92,4 +92,33 @@ export class SubscriptionController {
   resetUsage(@Param('id') id: string) {
     return this.subscriptionService.resetMonthlyUsage(id);
   }
+
+  @Post(':id/payment')
+  @ApiOperation({ summary: 'Create USDC payment for subscription' })
+  @ApiResponse({ status: 201, description: 'Payment created with receiver address and supported chains' })
+  createPayment(
+    @Param('id') id: string,
+    @Body() body: { amount: number; walletAddress: string; metadata?: Record<string, any> },
+  ) {
+    return this.subscriptionService.createPayment(
+      id,
+      body.amount,
+      body.walletAddress,
+      body.metadata,
+    );
+  }
+
+  @Post('payment/:paymentId/verify')
+  @ApiOperation({ summary: 'Verify and confirm blockchain payment' })
+  @ApiResponse({ status: 200, description: 'Payment verified and subscription activated' })
+  verifyPayment(
+    @Param('paymentId') paymentId: string,
+    @Body() body: { transactionHash: string; chainId: number },
+  ) {
+    return this.subscriptionService.verifyAndConfirmPayment(
+      paymentId,
+      body.transactionHash,
+      body.chainId,
+    );
+  }
 }

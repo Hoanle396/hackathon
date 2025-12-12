@@ -30,13 +30,19 @@ export class Payment {
   status: PaymentStatus;
 
   @Column({ nullable: true })
-  stripePaymentIntentId?: string;
+  transactionHash?: string;
 
   @Column({ nullable: true })
-  stripeChargeId?: string;
+  fromAddress?: string;
 
   @Column({ nullable: true })
-  receiptUrl?: string;
+  toAddress?: string;
+
+  @Column({ nullable: true })
+  chainId?: number;
+
+  @Column({ nullable: true })
+  blockNumber?: number;
 
   @Column({ type: 'json', nullable: true })
   metadata?: Record<string, any>;

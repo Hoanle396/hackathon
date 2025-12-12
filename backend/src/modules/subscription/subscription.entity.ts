@@ -64,10 +64,7 @@ export class Subscription {
   trialEnd?: Date;
 
   @Column({ nullable: true })
-  stripeCustomerId?: string;
-
-  @Column({ nullable: true })
-  stripeSubscriptionId?: string;
+  walletAddress?: string;
 
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'userId' })
