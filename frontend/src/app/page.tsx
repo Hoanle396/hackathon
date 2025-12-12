@@ -1,124 +1,221 @@
-'use client';
+// Modern Dark Landing Page for AI Code Reviewer
+// Sections: Hero, About, Features, Workflow, Pricing CTA, Testimonials, Footer
+// Styling: Tailwind, dark theme, smooth animations
 
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { useAuthStore } from '@/store/auth';
-import { Button } from '@/components/ui/button';
+"use client";
 
-export default function HomePage() {
-  const router = useRouter();
-  const { user } = useAuthStore();
+import { motion } from "framer-motion";
+import Link from "next/link";
+import {
+  CheckCircle,
+  Sparkles,
+  Zap,
+  Code2,
+  ShieldCheck,
+  GitBranch,
+} from "lucide-react";
+import { EncryptedText } from "@/components/ui/encrypted-text";
+import { BackgroundBeams } from "@/components/ui/background-beams";
 
-  useEffect(() => {
-    if (user) {
-      router.push('/dashboard');
-    }
-  }, [user, router]);
-
+export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      {/* Navigation */}
-      <nav className="backdrop-blur-md bg-white/80 shadow-sm border-b sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="text-xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-              AI Code Reviewer
-            </div>
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" onClick={() => router.push('/pricing')} className="hover:text-primary">
-                Bảng giá
-              </Button>
-              <Button variant="ghost" onClick={() => router.push('/login')} className="hover:text-primary">
-                Đăng nhập
-              </Button>
-              <Button onClick={() => router.push('/auth/register')} className="shadow-lg hover:shadow-xl">
-                Bắt đầu miễn phí
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-black text-zinc-300 overflow-hidden">
+      {/* HERO SECTION */}
+      <section className="relative py-32 px-6 text-center">
+        <BackgroundBeams />
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-6xl font-bold bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-transparent"
+        >
+          <EncryptedText text="AI Code Reviewer for Modern Development" />
+        </motion.h1>
 
-      <div className="container mx-auto px-4 py-20">
-        <div className="text-center animate-fade-in">
-          <div className="inline-block mb-4 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold">
-            ✨ Powered by Advanced AI
-          </div>
-          <h1 className="text-7xl font-extrabold mb-6 leading-tight">
-            <span className="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-              AI Code Reviewer
-            </span>
-          </h1>
-          <p className="text-2xl text-gray-700 mb-10 max-w-3xl mx-auto font-medium leading-relaxed">
-            Hệ thống review code tự động với AI. Hiểu business context, phát hiện lỗi chính xác, 
-            và học từ feedback của bạn.
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="mt-6 text-xl text-zinc-400 max-w-2xl mx-auto"
+        >
+          Automatically review your pull requests, detect issues, enforce best
+          practices, and improve code quality — powered by next-generation AI.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+          className="mt-10 flex justify-center gap-4"
+        >
+          <Link
+            href="/register"
+            className="px-8 py-3 rounded-md bg-white text-black font-semibold hover:bg-zinc-200 transition shadow-lg"
+          >
+            Get Started Free
+          </Link>
+          <Link
+            href="/pricing"
+            className="px-8 py-3 rounded-md border border-zinc-700 hover:border-zinc-500 hover:text-white transition"
+          >
+            View Pricing
+          </Link>
+        </motion.div>
+      </section>
+
+      {/* ABOUT SECTION */}
+      <section className="py-28 px-6 bg-gradient-to-b from-black to-zinc-950">
+        <div className="max-w-5xl mx-auto text-center">
+          <h2 className="text-4xl font-bold text-white">
+            What is AI Code Reviewer?
+          </h2>
+          <p className="mt-4 text-zinc-400 max-w-2xl mx-auto">
+            Our AI-powered reviewer analyzes your code with precision —
+            detecting bugs, refactoring opportunities, security risks, and
+            architectural inconsistencies.
           </p>
-          
-          <div className="flex gap-4 justify-center mb-6 animate-slide-in">
-            <Button size="lg" onClick={() => router.push('/auth/register')} className="text-base px-8 py-6 shadow-xl hover:shadow-2xl">
-              🚀 Bắt đầu miễn phí
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => router.push('/pricing')} className="text-base px-8 py-6">
-              💎 Xem bảng giá
-            </Button>
-          </div>
-          <div className="flex items-center justify-center gap-6 text-sm text-gray-600 mb-20">
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span>Không cần thẻ tín dụng</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span>Dùng thử miễn phí</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span>Hủy bất cứ lúc nào</span>
-            </div>
-          </div>
+        </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <div className="group bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-primary/30 hover:-translate-y-2">
-              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform duration-300">🤖</div>
-              <h3 className="text-2xl font-bold mb-3 text-gray-900">AI Review Thông Minh</h3>
-              <p className="text-gray-600 leading-relaxed">
-                AI hiểu business context và review code theo đúng quy chuẩn của dự án
-              </p>
-              <div className="mt-4 text-primary font-semibold group-hover:translate-x-2 transition-transform duration-300 inline-flex items-center">
-                Tìm hiểu thêm →
-              </div>
-            </div>
-            
-            <div className="group bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-secondary/30 hover:-translate-y-2">
-              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform duration-300">🔄</div>
-              <h3 className="text-2xl font-bold mb-3 text-gray-900">Tự Động Hóa</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Webhook tự động review mỗi pull request, comment ngay lập tức
-              </p>
-              <div className="mt-4 text-secondary font-semibold group-hover:translate-x-2 transition-transform duration-300 inline-flex items-center">
-                Tìm hiểu thêm →
-              </div>
-            </div>
-            
-            <div className="group bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-accent/30 hover:-translate-y-2">
-              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform duration-300">📚</div>
-              <h3 className="text-2xl font-bold mb-3 text-gray-900">Học & Cải Thiện</h3>
-              <p className="text-gray-600 leading-relaxed">
-                AI học từ feedback của bạn, ngày càng review chính xác hơn
-              </p>
-              <div className="mt-4 text-accent font-semibold group-hover:translate-x-2 transition-transform duration-300 inline-flex items-center">
-                Tìm hiểu thêm →
-              </div>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mt-16 max-w-6xl mx-auto">
+          <AboutCard
+            icon={<Sparkles className="h-8 w-8 text-indigo-400" />}
+            title="AI-Powered Insights"
+            desc="Identify issues in real-time with advanced code understanding."
+          />
+          <AboutCard
+            icon={<ShieldCheck className="h-8 w-8 text-green-400" />}
+            title="Security First"
+            desc="Detect vulnerabilities and unsafe patterns before merging."
+          />
+          <AboutCard
+            icon={<GitBranch className="h-8 w-8 text-blue-400" />}
+            title="Seamless Git Integration"
+            desc="Works with GitHub, GitLab, Bitbucket, and more."
+          />
+        </div>
+      </section>
+
+      {/* FEATURES SECTION */}
+      <section className="py-28 px-6">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-4xl font-bold text-white text-center">
+            Core Features
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-16">
+            <FeatureItem
+              title="Deep Code Understanding"
+              desc="Understands logic, context, and architecture — just like a senior engineer."
+            />
+            <FeatureItem
+              title="Automated PR Reviews"
+              desc="AI leaves comments directly inside your pull requests."
+            />
+            <FeatureItem
+              title="Performance & Security Checks"
+              desc="Optimize performance and avoid security vulnerabilities."
+            />
+            <FeatureItem
+              title="Multi-Language Support"
+              desc="Supports JavaScript, TypeScript, Python, Go, Rust, Java, and more."
+            />
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* WORKFLOW SECTION */}
+      <section className="py-28 px-6 bg-zinc-900/40 border-t border-zinc-800">
+        <div className="max-w-5xl mx-auto text-center">
+          <h2 className="text-4xl font-bold text-white">How It Works</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mt-16 max-w-6xl mx-auto">
+          <WorkflowStep
+            number={1}
+            title="Connect Your Repo"
+            desc="Integrate GitHub, GitLab, or Bitbucket."
+          />
+          <WorkflowStep
+            number={2}
+            title="AI Analyzes Code"
+            desc="Every commit is scanned for issues and improvements."
+          />
+          <WorkflowStep
+            number={3}
+            title="Instant Review Feedback"
+            desc="AI suggests fixes and improvements directly in your PR."
+          />
+        </div>
+      </section>
+
+      {/* CTA SECTION */}
+      <section className="py-28 text-center px-6">
+        <div className="max-w-4xl mx-auto bg-gradient-to-r from-indigo-900 to-purple-900 rounded-3xl p-16 shadow-xl">
+          <h2 className="text-4xl font-bold text-white mb-4">
+            Ready to level up your code quality?
+          </h2>
+          <p className="text-lg text-zinc-300 mb-8">
+            Start using AI Code Reviewer today — no credit card required.
+          </p>
+          <Link
+            href="/register"
+            className="px-10 py-4 bg-white text-black font-semibold rounded-md hover:bg-zinc-200 transition"
+          >
+            Get Started Free
+          </Link>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="py-10 border-t border-zinc-800 text-center text-zinc-500">
+        <p>
+          © {new Date().getFullYear()} AI Code Reviewer. All rights reserved.
+        </p>
+      </footer>
     </div>
   );
 }
+
+/* COMPONENTS */
+interface AboutCardProps {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+}
+const AboutCard = ({ icon, title, desc }: AboutCardProps) => (
+  <div className="p-8 bg-zinc-900/60 border border-zinc-800 rounded-xl text-center hover:border-zinc-600 transition">
+    <div className="flex justify-center mb-4">{icon}</div>
+    <h3 className="text-xl font-semibold text-white">{title}</h3>
+    <p className="mt-2 text-zinc-400">{desc}</p>
+  </div>
+);
+
+interface FeatureItemProps {
+  title: string;
+  desc: string;
+}
+const FeatureItem = ({ title, desc }: FeatureItemProps) => (
+  <div className="p-8 bg-zinc-900/40 border border-zinc-800 rounded-xl hover:bg-zinc-900/60 hover:border-zinc-600 transition">
+    <h3 className="text-2xl font-semibold text-white mb-2">{title}</h3>
+    <p className="text-zinc-400">{desc}</p>
+    <div className="mt-4 flex items-center gap-2">
+      <CheckCircle className="h-5 w-5 text-green-400" />
+      <span className="text-zinc-300">Included</span>
+    </div>
+  </div>
+);
+interface WorkflowStepProps {
+  number: number;
+  title: string;
+  desc: string;
+}
+
+const WorkflowStep = ({ number, title, desc }: WorkflowStepProps) => (
+  <div className="text-center">
+    <div className="w-16 h-16 mx-auto rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-2xl font-bold text-white">
+      {number}
+    </div>
+    <h3 className="text-xl font-semibold text-white mt-4">{title}</h3>
+    <p className="text-zinc-400 mt-2 max-w-sm mx-auto">{desc}</p>
+  </div>
+);

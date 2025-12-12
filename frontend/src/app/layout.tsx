@@ -1,13 +1,16 @@
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import './globals.css';
-import { Toaster } from 'react-hot-toast';
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { Toaster } from "react-hot-toast";
+import Header from "@/components/layout/header";
+import MainLayout from "@/components/layout/main-layout";
+import Providers from "./providers";
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'AI Code Reviewer',
-  description: 'Intelligent code review system powered by AI',
+  title: "AI Code Reviewer",
+  description: "Intelligent code review system powered by AI",
 };
 
 export default function RootLayout({
@@ -16,10 +19,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        {children}
-        <Toaster position="top-right" />
+        <Providers>
+          <MainLayout>{children}</MainLayout>
+
+          <Toaster position="top-right" />
+        </Providers>
       </body>
     </html>
   );
