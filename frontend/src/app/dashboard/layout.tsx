@@ -3,14 +3,21 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/auth";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, Mail } from "lucide-react";
+import { 
+  LogOut, 
+  LayoutDashboard, 
+  Users, 
+  Mail, 
+  CreditCard, 
+  Settings,
+  ChevronLeft,
+  ChevronRight
+} from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-
-import { ChevronDown } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
 export default function DashboardLayout({
   children,
 }: {
@@ -19,9 +26,9 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
-  const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [pendingInvitations, setPendingInvitations] = useState(0);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -62,184 +69,135 @@ export default function DashboardLayout({
   const isActive = (path: string) =>
     path === pathname || (path !== "/dashboard" && pathname?.startsWith(path));
 
+  const menuItems = [
+    { href: "/dashboard", label: "Projects", icon: LayoutDashboard },
+    { href: "/dashboard/teams", label: "Teams", icon: Users },
+    { 
+      href: "/dashboard/invitations", 
+      label: "Invitations", 
+      icon: Mail,
+      badge: pendingInvitations > 0 ? pendingInvitations : undefined
+    },
+    { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
+    { href: "/dashboard/settings", label: "Settings", icon: Settings },
+  ];
+
   return (
-    <div className="min-h-screen bg-black text-gray-100">
-      <nav className="backdrop-blur-md bg-black border-b border-zinc-800 sticky top-0 z-50">
-        <div className="container mx-auto px-6">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
+    <div className="min-h-screen bg-black text-gray-100 flex">
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          "fixed left-0 top-0 h-full bg-zinc-950 border-r border-zinc-800 transition-all duration-300 z-50 flex flex-col",
+          collapsed ? "w-16" : "w-64"
+        )}
+      >
+        {/* Logo & Toggle */}
+        <div className="h-16 flex items-center justify-between px-4 border-b border-zinc-800">
+          {!collapsed && (
             <Link href="/dashboard">
-              <div className="text-xl font-bold bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent cursor-pointer">
+              <div className="text-xl font-bold text-white cursor-pointer">
                 AI Code Reviewer
               </div>
             </Link>
-
-            {/* Navigation */}
-            <div className="flex items-center gap-8">
-              <Link
-                href="/dashboard"
-                className={cn(
-                  "relative text-zinc-300 transition-all duration-300 group",
-                  isActive("/dashboard") && "text-white"
-                )}
-              >
-                Projects
-                <span
-                  className={cn(
-                    "absolute left-0 -bottom-1 h-[2px] bg-white transition-all duration-300",
-                    isActive("/dashboard") ? "w-full" : "w-0 group-hover:w-full"
-                  )}
-                />
-              </Link>
-
-              <Link
-                href="/dashboard/teams"
-                className={cn(
-                  "relative text-zinc-300 transition-all duration-300 group",
-                  isActive("/dashboard/teams") && "text-white"
-                )}
-              >
-                Teams
-                <span
-                  className={cn(
-                    "absolute left-0 -bottom-1 h-[2px] bg-white transition-all duration-300",
-                    isActive("/dashboard/teams")
-                      ? "w-full"
-                      : "w-0 group-hover:w-full"
-                  )}
-                />
-              </Link>
-
-              <Link
-                href="/dashboard/invitations"
-                className={cn(
-                  "relative text-zinc-300 transition-all duration-300 group flex items-center gap-1.5",
-                  isActive("/dashboard/invitations") && "text-white"
-                )}
-              >
-                Invitations
-                {pendingInvitations > 0 && (
-                  <Badge
-                    variant="destructive"
-                    className="ml-1 h-5 px-2 text-xs animate-pulse"
-                  >
-                    {pendingInvitations}
-                  </Badge>
-                )}
-                <span
-                  className={cn(
-                    "absolute left-0 -bottom-1 h-[2px] bg-white transition-all duration-300",
-                    isActive("/dashboard/invitations")
-                      ? "w-full"
-                      : "w-0 group-hover:w-full"
-                  )}
-                />
-              </Link>
-
-              <Link
-                href="/dashboard/billing"
-                className={cn(
-                  "relative text-zinc-300 transition-all duration-300 group",
-                  isActive("/dashboard/billing") && "text-white"
-                )}
-              >
-                Billing
-                <span
-                  className={cn(
-                    "absolute left-0 -bottom-1 h-[2px] bg-white transition-all duration-300",
-                    isActive("/dashboard/billing")
-                      ? "w-full"
-                      : "w-0 group-hover:w-full"
-                  )}
-                />
-              </Link>
-
-              <Link
-                href="/dashboard/settings"
-                className={cn(
-                  "relative text-zinc-300 transition-all duration-300 group",
-                  isActive("/dashboard/settings") && "text-white"
-                )}
-              >
-                Settings
-                <span
-                  className={cn(
-                    "absolute left-0 -bottom-1 h-[2px] bg-white transition-all duration-300",
-                    isActive("/dashboard/settings")
-                      ? "w-full"
-                      : "w-0 group-hover:w-full"
-                  )}
-                />
-              </Link>
-            </div>
-
-            {/* User Dropdown - Click to open */}
-            <div className="relative">
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-zinc-900/70 transition-all duration-200 focus:outline-none"
-              >
-                <Avatar className="h-9 w-9 ring-2 ring-zinc-700 ring-offset-2 ring-offset-black">
-                  <AvatarFallback className="bg-gradient-to-br from-zinc-600 to-zinc-800 text-white font-semibold">
-                    {user.fullName?.charAt(0).toUpperCase() ||
-                      user.email.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-
-                <div className="hidden md:flex flex-col items-start">
-                  <span className="text-sm font-medium text-gray-200">
-                    {user.fullName || "User"}
-                  </span>
-                  <span className="text-xs text-zinc-500">{user.email}</span>
-                </div>
-
-                <ChevronDown
-                  className={cn(
-                    "h-4 w-4 text-zinc-500 transition-transform duration-200",
-                    isOpen && "rotate-180 text-zinc-300"
-                  )}
-                />
-              </button>
-
-              {/* Dropdown Menu */}
-              {isOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setIsOpen(false)}
-                  />
-
-                  <div className="absolute right-0 top-full mt-2 w-56 z-50">
-                    <div className="bg-zinc-900 rounded-xl shadow-2xl border border-zinc-800 py-2 overflow-hidden animate-in slide-in-from-top-2 duration-200">
-                      <div className="px-4 py-3 border-b border-zinc-800">
-                        <p className="text-sm font-semibold text-white">
-                          {user.fullName || "User"}
-                        </p>
-                        <p className="text-xs text-zinc-400 truncate">
-                          {user.email}
-                        </p>
-                      </div>
-
-                      <button
-                        onClick={() => {
-                          handleLogout();
-                          setIsOpen(false);
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-zinc-800/70 transition-colors"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        Logout
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
+          )}
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="p-2 rounded-lg hover:bg-zinc-900 transition-colors"
+          >
+            {collapsed ? (
+              <ChevronRight className="h-4 w-4 text-zinc-400" />
+            ) : (
+              <ChevronLeft className="h-4 w-4 text-zinc-400" />
+            )}
+          </button>
         </div>
-      </nav>
 
-      <main className="container mx-auto px-6 py-8">{children}</main>
+        {/* Navigation */}
+        <nav className="flex-1 px-3 py-4 space-y-1">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.href);
+            
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-3.5 rounded-lg transition-all duration-200 group relative",
+                  active
+                    ? "bg-zinc-900 text-white"
+                    : "text-zinc-300 hover:text-white hover:bg-zinc-900/50"
+                )}
+              >
+                <Icon className="h-5 w-5 flex-shrink-0" />
+                {!collapsed && (
+                  <>
+                    <span className="text-base font-semibold">{item.label}</span>
+                    {item.badge && (
+                      <Badge
+                        variant="destructive"
+                        className="ml-auto h-5 px-2 text-xs animate-pulse"
+                      >
+                        {item.badge}
+                      </Badge>
+                    )}
+                  </>
+                )}
+                {active && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r" />
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* User Profile */}
+        <div className="border-t border-zinc-800 p-3">
+          <div
+            className={cn(
+              "flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-900 transition-colors",
+              collapsed && "justify-center"
+            )}
+          >
+            <Avatar className="h-9 w-9 ring-2 ring-zinc-700">
+              <AvatarFallback className="bg-gradient-to-br from-zinc-600 to-zinc-800 text-white font-semibold text-sm">
+                {user.fullName?.charAt(0).toUpperCase() ||
+                  user.email.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+
+            {!collapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-base font-semibold text-white truncate">
+                  {user.fullName || "User"}
+                </p>
+                <p className="text-sm text-zinc-400 truncate">{user.email}</p>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={handleLogout}
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2 mt-2 rounded-lg text-zinc-300 hover:text-white hover:bg-zinc-900 transition-colors",
+              collapsed && "justify-center"
+            )}
+          >
+            <LogOut className="h-5 w-5" />
+            {!collapsed && <span className="text-base font-medium">Logout</span>}
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <div
+        className={cn(
+          "flex-1 transition-all duration-300",
+          collapsed ? "ml-16" : "ml-64"
+        )}
+      >
+        <main className="container mx-auto px-6 py-8">{children}</main>
+      </div>
     </div>
   );
 }

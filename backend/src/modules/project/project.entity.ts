@@ -66,7 +66,7 @@ export class Project {
   @Column({ nullable: true })
   teamId?: string;
 
-  @OneToMany(() => Review, (review) => review.project)
+  @OneToMany(() => Review, (review) => review.project, { cascade: true, onDelete: 'CASCADE' })
   reviews: Review[];
 
   @CreateDateColumn()

@@ -23,9 +23,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, BookOpen } from "lucide-react";
 import { projectService, CreateProjectData } from "@/services/project.service";
 import { cn } from "@/lib/utils";
+import { WebhookSetupGuide } from "@/components/webhook-setup-guide";
 
 interface Team {
   id: string;
@@ -75,9 +76,10 @@ export default function NewProjectPage() {
   const onSubmit = async (data: CreateProjectData) => {
     setLoading(true);
     try {
-      await projectService.create(data);
+      const project = await projectService.create(data);
       toast.success("Project created successfully!");
-      router.push("/dashboard");
+      // Redirect to success page with project info
+      router.push(`/dashboard/projects/success?name=${encodeURIComponent(data.name)}&id=${project.id}`);
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to create project");
     } finally {
@@ -86,50 +88,59 @@ export default function NewProjectPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 md:space-y-6">
       {/* Back Button */}
       <Button
         variant="ghost"
         onClick={() => router.back()}
-        className="mb-8 text-zinc-400 hover:text-white hover:bg-zinc-900/70"
+        className="text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Projects
       </Button>
 
       {/* Main Card */}
-      <Card className="bg-zinc-900/50 backdrop-blur-sm border-zinc-800 shadow-xl">
-        <CardHeader className="pb-8">
-          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
-            Create New Project
-          </CardTitle>
-          <CardDescription className="text-zinc-400 text-lg mt-3">
-            Add a repository to enable AI-powered code reviews and improve code
-            quality
-          </CardDescription>
+      <Card className="bg-zinc-900/50 backdrop-blur-sm border-zinc-800 shadow-2xl hover:border-zinc-700 transition-colors">
+        <CardHeader className="pb-6 md:pb-8 border-b border-zinc-800/50">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+            <div className="flex-1 space-y-2">
+              <CardTitle className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
+                Create New Project
+              </CardTitle>
+              <CardDescription className="text-zinc-400 text-sm sm:text-base flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 flex-shrink-0"></span>
+                Add a repository to enable AI-powered code reviews and improve code quality
+              </CardDescription>
+            </div>
+            <div className="self-start sm:self-center">
+              <WebhookSetupGuide />
+            </div>
+          </div>
         </CardHeader>
 
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <CardContent className="pt-8">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             {/* Project Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-zinc-200">
+            <div className="space-y-3">
+              <Label htmlFor="name" className="text-zinc-200 text-sm font-semibold">
                 Project Name <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
                 placeholder="e.g. E-commerce Platform, Mobile Banking App..."
-                className="bg-zinc-800/50 border-zinc-700 focus:border-zinc-500 text-white placeholder-zinc-500"
+                className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 h-12 transition-all"
                 {...register("name", { required: "Project name is required" })}
               />
               {errors.name && (
-                <p className="text-sm text-red-500">{errors.name.message}</p>
+                <p className="text-sm text-red-500 flex items-center gap-2">
+                  {errors.name.message}
+                </p>
               )}
             </div>
 
             {/* Team */}
-            <div className="space-y-2">
-              <Label htmlFor="teamId" className="text-zinc-200">
+            <div className="space-y-3">
+              <Label htmlFor="teamId" className="text-zinc-200 text-sm font-semibold">
                 Team <span className="text-red-500">*</span>
               </Label>
               <Select
@@ -162,8 +173,8 @@ export default function NewProjectPage() {
             </div>
 
             {/* Platform */}
-            <div className="space-y-2">
-              <Label htmlFor="type" className="text-zinc-200">
+            <div className="space-y-3">
+              <Label htmlFor="type" className="text-zinc-200 text-sm font-semibold">
                 Platform <span className="text-red-500">*</span>
               </Label>
               <Select
@@ -171,15 +182,15 @@ export default function NewProjectPage() {
                   setValue("type", value)
                 }
               >
-                <SelectTrigger className="bg-zinc-800/50 border-zinc-700 text-white w-full">
+                <SelectTrigger className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white w-full h-12 transition-all">
                   <SelectValue placeholder="Select platform" />
                 </SelectTrigger>
                 <SelectContent className="bg-zinc-900 border-zinc-700 w-full">
-                  <SelectItem value="github" className="text-zinc-200">
-                    GitHub
+                  <SelectItem value="github" className="text-zinc-200 focus:bg-zinc-800">
+                    🐙 GitHub
                   </SelectItem>
-                  <SelectItem value="gitlab" className="text-zinc-200">
-                    GitLab
+                  <SelectItem value="gitlab" className="text-zinc-200 focus:bg-zinc-800">
+                    🦊 GitLab
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -189,8 +200,8 @@ export default function NewProjectPage() {
             </div>
 
             {/* Repository URL */}
-            <div className="space-y-2">
-              <Label htmlFor="repositoryUrl" className="text-zinc-200">
+            <div className="space-y-3">
+              <Label htmlFor="repositoryUrl" className="text-zinc-200 text-sm font-semibold">
                 Repository URL <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -206,6 +217,29 @@ export default function NewProjectPage() {
                   {errors.repositoryUrl.message}
                 </p>
               )}
+              
+              {/* Webhook Setup Reminder */}
+              <div className="mt-3 flex items-start gap-2 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                <BookOpen className="h-4 w-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 text-sm">
+                  <p className="text-blue-300 font-medium mb-1">
+                    Don't forget to setup webhook!
+                  </p>
+                  <p className="text-zinc-400">
+                    After creating the project, configure the webhook in your repository settings.{" "}
+                    <WebhookSetupGuide
+                      trigger={
+                        <button
+                          type="button"
+                          className="text-blue-400 hover:text-blue-300 underline font-medium inline"
+                        >
+                          View guide
+                        </button>
+                      }
+                    />
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Business Context */}
@@ -217,61 +251,64 @@ export default function NewProjectPage() {
                 id="businessContext"
                 placeholder="Describe your project: main technologies, coding standards, important business logic, security concerns, performance requirements, etc."
                 rows={6}
-                className="bg-zinc-800/50 border-zinc-700 focus:border-zinc-500 text-white placeholder-zinc-500 resize-none"
+                className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 resize-none transition-all"
                 {...register("businessContext")}
               />
-              <p className="text-xs text-zinc-500">
-                This information helps the AI provide more accurate and relevant
-                code reviews
+              <p className="text-xs text-zinc-500 flex items-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
+                This information helps the AI provide more accurate and relevant code reviews
               </p>
             </div>
 
             {/* Discord Channel ID */}
-            <div className="space-y-2">
-              <Label htmlFor="discordChannelId" className="text-zinc-200">
+            <div className="space-y-3">
+              <Label htmlFor="discordChannelId" className="text-zinc-200 text-sm font-semibold">
                 Discord Channel ID (Optional)
               </Label>
               <Input
                 id="discordChannelId"
                 placeholder="1234567890123456789"
-                className="bg-zinc-800/50 border-zinc-700 focus:border-zinc-500 text-white placeholder-zinc-500 font-mono text-sm"
+                className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 font-mono text-sm h-12 transition-all"
                 {...register("discordChannelId")}
               />
-              <p className="text-xs text-zinc-500">
-                Receive PR notifications and review results directly in Discord
-                (requires bot setup)
+              <p className="text-xs text-zinc-500 flex items-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
+                Receive PR notifications and review results directly in Discord (requires bot setup)
               </p>
             </div>
 
             {/* Auto Review Toggle */}
-            <div className="flex items-center justify-between py-4">
-              <div className="space-y-1">
-                <Label
-                  htmlFor="autoReview"
-                  className="text-zinc-200 text-base cursor-pointer"
-                >
-                  Enable Auto Review
-                </Label>
-                <p className="text-sm text-zinc-500">
-                  AI will automatically review every new Pull Request
-                </p>
+            <div className="p-5 rounded-xl bg-zinc-800/20 border border-zinc-800">
+              <div className="flex items-center justify-between py-2">
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="autoReview"
+                    className="text-white text-base font-semibold cursor-pointer"
+                  >
+                    Enable Auto Review
+                  </Label>
+                  <p className="text-sm text-zinc-400">
+                    AI will automatically review every new Pull Request
+                  </p>
+                </div>
+                <Switch
+                  id="autoReview"
+                  checked={autoReview}
+                  onCheckedChange={(checked) => setValue("autoReview", checked)}
+                  className="data-[state=checked]:bg-white"
+                />
               </div>
-              <Switch
-                id="autoReview"
-                checked={autoReview}
-                onCheckedChange={(checked) => setValue("autoReview", checked)}
-              />
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-6">
+            <div className="flex flex-col sm:flex-row gap-4 pt-8">
               <Button
                 type="submit"
                 disabled={loading}
                 size="lg"
                 className={cn(
-                  "flex-1 bg-gradient-to-r from-white to-zinc-400 text-black font-semibold shadow-lg hover:shadow-xl hover:from-zinc-200 hover:to-zinc-500 transition-all duration-300",
-                  loading && "opacity-80 cursor-not-allowed"
+                  "flex-1 bg-white text-black font-semibold shadow-lg hover:shadow-xl hover:bg-zinc-200 transition-all duration-300 h-12",
+                  loading && "opacity-60 cursor-not-allowed"
                 )}
               >
                 <Plus className="h-5 w-5 mr-2" />
@@ -283,7 +320,7 @@ export default function NewProjectPage() {
                 variant="outline"
                 size="lg"
                 onClick={() => router.back()}
-                className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white hover:border-zinc-600 transition-all h-12"
               >
                 Cancel
               </Button>

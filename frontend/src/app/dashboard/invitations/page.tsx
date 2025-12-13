@@ -196,37 +196,39 @@ export default function InvitationsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 space-y-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 md:space-y-8">
       {/* Header */}
-      <div className="flex items-center gap-5">
-        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-800 flex items-center justify-center shadow-xl">
-          <Mail className="h-8 w-8 text-zinc-300" />
-        </div>
-        <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
-            Team Invitations
-          </h1>
-          <p className="text-zinc-400 mt-2 text-lg">
-            Review and respond to pending team invitations
-          </p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 pb-4 sm:pb-6 border-b border-zinc-800/50">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-900/50 flex items-center justify-center flex-shrink-0">
+            <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+          </div>
+          <div className="space-y-1">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
+              Team Invitations
+            </h1>
+            <p className="text-zinc-400 text-sm sm:text-base">
+              Review and respond to pending team invitations
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Empty State */}
       {invitations.length === 0 ? (
-        <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
-          <CardContent className="flex flex-col items-center justify-center py-20 space-y-8">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center shadow-2xl">
-              <Mail className="h-12 w-12 text-zinc-500" />
+        <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm shadow-2xl">
+          <CardContent className="flex flex-col items-center justify-center py-24 space-y-8">
+            <div className="w-28 h-28 rounded-full bg-zinc-800 flex items-center justify-center shadow-2xl ring-4 ring-zinc-800/50 ring-offset-4 ring-offset-black">
+              <Mail className="h-14 w-14 text-zinc-400" />
             </div>
             <div className="text-center space-y-4 max-w-md">
-              <h3 className="text-3xl font-bold bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
+              <h3 className="text-4xl font-bold text-white">
                 No Pending Invitations
               </h3>
-              <p className="text-zinc-400 text-lg">
+              <p className="text-zinc-400 text-base leading-relaxed">
                 You don't have any team invitations at the moment.
               </p>
-              <p className="text-zinc-500">
+              <p className="text-zinc-500 text-sm">
                 When someone invites you to a team, it will appear here.
               </p>
             </div>
@@ -242,30 +244,35 @@ export default function InvitationsPage() {
               <Card
                 key={invitation.id}
                 className={cn(
-                  "bg-zinc-900/70 border-zinc-800 backdrop-blur-sm hover:border-zinc-700 hover:shadow-2xl transition-all duration-300",
+                  "bg-zinc-900/70 border-zinc-800 backdrop-blur-sm hover:border-zinc-600 hover:shadow-2xl transition-all duration-300",
                   expired && "opacity-60 border-zinc-700"
                 )}
                 style={{ animationDelay: `${index * 70}ms` }}
               >
-                <CardHeader className="pb-4">
+                <CardHeader className="pb-5 pt-6">
                   <div className="flex items-start justify-between gap-6">
-                    <div className="flex-1">
-                      <CardTitle className="text-2xl font-bold text-white flex items-center gap-3">
-                        {invitation.team.name}
+                    <div className="flex-1 space-y-3">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <CardTitle className="text-2xl font-bold text-white">
+                          {invitation.team.name}
+                        </CardTitle>
                         <Badge
                           variant={getPlanVariant(invitation.team.plan)}
                           className={cn(
-                            "capitalize font-medium",
+                            "capitalize font-semibold px-3 py-1",
                             invitation.team.plan.toUpperCase() ===
                               "ENTERPRISE" &&
-                              "bg-red-500/20 text-red-400 border-red-500/50"
+                              "bg-red-500/10 text-red-400 border-red-500/30",
+                            invitation.team.plan.toUpperCase() ===
+                              "PROFESSIONAL" &&
+                              "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
                           )}
                         >
                           {invitation.team.plan.toLowerCase()}
                         </Badge>
-                      </CardTitle>
+                      </div>
                       {invitation.team.description && (
-                        <CardDescription className="mt-3 text-zinc-400 text-base">
+                        <CardDescription className="text-zinc-400 text-sm leading-relaxed">
                           {invitation.team.description}
                         </CardDescription>
                       )}
@@ -273,9 +280,11 @@ export default function InvitationsPage() {
                     <Badge
                       variant={getRoleVariant(invitation.role)}
                       className={cn(
-                        "text-lg px-4 py-2 font-semibold capitalize",
+                        "px-4 py-2 font-bold capitalize text-sm",
                         invitation.role === "ADMIN" &&
-                          "bg-blue-500/20 text-blue-400 border-blue-500/50"
+                          "bg-blue-500/10 text-blue-400 border-blue-500/30",
+                        invitation.role === "MEMBER" &&
+                          "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
                       )}
                     >
                       {invitation.role.toLowerCase()}
@@ -285,36 +294,36 @@ export default function InvitationsPage() {
 
                 <CardContent>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                    <div className="flex items-center gap-3 text-zinc-400">
-                      <Clock className="h-5 w-5 flex-shrink-0" />
+                    <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-zinc-800/30 border border-zinc-800">
+                      <Clock className="h-5 w-5 flex-shrink-0 text-zinc-500" />
                       <span
-                        className={cn("font-medium", expired && "text-red-500")}
+                        className={cn("font-semibold", expired ? "text-red-400" : "text-zinc-300")}
                       >
                         {formatExpiry(invitation.invitationExpiresAt)}
                       </span>
                       {expired && (
-                        <span className="flex items-center gap-1 text-red-500">
+                        <span className="flex items-center gap-1.5 text-red-400 text-sm">
                           <AlertCircle className="h-4 w-4" />
-                          Invitation expired
+                          Expired
                         </span>
                       )}
                     </div>
 
                     {!expired && (
-                      <div className="flex gap-4">
+                      <div className="flex gap-3">
                         <Button
                           size="lg"
                           onClick={() => handleAccept(invitation)}
-                          className="bg-gradient-to-r from-white to-zinc-400 text-black hover:from-zinc-200 hover:to-zinc-500 shadow-lg hover:shadow-xl font-medium"
+                          className="bg-white text-black hover:bg-zinc-200 shadow-lg hover:shadow-xl font-semibold"
                         >
                           <CheckCircle className="h-5 w-5 mr-2" />
-                          Accept Invitation
+                          Accept
                         </Button>
                         <Button
                           size="lg"
                           variant="outline"
                           onClick={() => handleDecline(invitation)}
-                          className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                          className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white hover:border-zinc-600"
                         >
                           <XCircle className="h-5 w-5 mr-2" />
                           Decline

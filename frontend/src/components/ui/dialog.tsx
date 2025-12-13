@@ -1,37 +1,80 @@
 import * as React from "react"
+import * as ReactDOM from "react-dom"
+import { X } from "lucide-react"
+import { cn } from "@/lib/utils"
 
-const Dialog = ({ open, onOpenChange, children }: {
+interface DialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   children: React.ReactNode;
-}) => {
-  if (!open) return null;
+}
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+const Dialog = ({ open, onOpenChange, children }: DialogProps) => {
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  React.useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [open]);
+
+  if (!open || !mounted) return null;
+
+  return ReactDOM.createPortal(
+    <div className="fixed inset-0 z-[9999]">
       <div 
-        className="fixed inset-0 bg-black/50"
+        className="absolute inset-0 bg-black/80 backdrop-blur-xl"
         onClick={() => onOpenChange(false)}
       />
-      <div className="relative z-50 max-h-[90vh] overflow-auto">
-        {children}
+      <div className="relative h-full flex items-center justify-center p-4 overflow-y-auto">
+        <div className="w-full py-8 animate-in fade-in-0 zoom-in-95 duration-300 drop-shadow-2xl">
+          {children}
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
-const DialogContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, children, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={`relative bg-white rounded-lg shadow-lg p-6 w-full max-w-lg ${className || ''}`}
-    {...props}
-  >
-    {children}
-  </div>
-));
+interface DialogContentProps extends React.HTMLAttributes<HTMLDivElement> {
+  onClose?: () => void;
+}
+
+const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
+  ({ className, children, onClose, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(
+        "relative bg-zinc-900 border-2 border-zinc-600 rounded-2xl mx-auto",
+        "backdrop-blur-xl bg-zinc-900",
+        "shadow-[0_0_60px_rgba(255,255,255,0.1)] ring-1 ring-white/10",
+        className
+      )}
+      {...props}
+    >
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 z-20 rounded-lg p-2 opacity-70 ring-offset-zinc-900 transition-all hover:opacity-100 hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 disabled:pointer-events-none"
+        >
+          <X className="h-5 w-5 text-zinc-400 hover:text-white" />
+          <span className="sr-only">Close</span>
+        </button>
+      )}
+      {children}
+    </div>
+  )
+);
 DialogContent.displayName = "DialogContent";
 
 const DialogHeader = ({
@@ -39,7 +82,10 @@ const DialogHeader = ({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={`flex flex-col space-y-1.5 text-center sm:text-left ${className || ''}`}
+    className={cn(
+      "flex flex-col space-y-2 text-left mb-6 pr-8",
+      className
+    )}
     {...props}
   />
 );
@@ -51,7 +97,10 @@ const DialogTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={`text-lg font-semibold leading-none tracking-tight ${className || ''}`}
+    className={cn(
+      "text-2xl sm:text-3xl font-bold text-white leading-tight tracking-tight",
+      className
+    )}
     {...props}
   />
 ));
@@ -63,11 +112,34 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={`text-sm text-gray-500 ${className || ''}`}
+    className={cn("text-sm sm:text-base text-zinc-400 leading-relaxed", className)}
     {...props}
   />
 ));
 DialogDescription.displayName = "DialogDescription";
+
+const DialogFooter = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+  <div
+    className={cn(
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-6",
+      className
+    )}
+    {...props}
+  />
+);
+DialogFooter.displayName = "DialogFooter";
+
+interface DialogTriggerProps {
+  children: React.ReactNode;
+  onClick: () => void;
+}
+
+const DialogTrigger = ({ children, onClick }: DialogTriggerProps) => {
+  return React.cloneElement(children as React.ReactElement, { onClick });
+};
 
 export {
   Dialog,
@@ -75,4 +147,6 @@ export {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
+  DialogTrigger,
 };

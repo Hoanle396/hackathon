@@ -1,4 +1,5 @@
 import * as React from "react";
+import { cn } from "@/lib/utils";
 
 const Tabs = ({
   defaultValue,
@@ -35,9 +36,10 @@ const TabsList = ({
   className?: string;
 }) => (
   <div
-    className={`inline-flex h-10 items-center justify-center rounded-md bg-gray-100 p-1 text-gray-500 ${
-      className || ""
-    }`}
+    className={cn(
+      "inline-flex h-11 items-center justify-center rounded-lg bg-zinc-800/50 p-1 border border-zinc-700",
+      className
+    )}
   >
     {React.Children.map(children, (child) => {
       if (React.isValidElement(child)) {
@@ -63,11 +65,15 @@ const TabsTrigger = ({
 }) => (
   <button
     onClick={() => setActiveTab?.(value)}
-    className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+    className={cn(
+      "inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium transition-all",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900",
+      "disabled:pointer-events-none disabled:opacity-50",
       activeTab === value
-        ? "bg-white text-gray-900 shadow-sm"
-        : "text-gray-600 hover:text-gray-50"
-    } ${className || ""}`}
+        ? "bg-zinc-700 text-white shadow-sm"
+        : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50",
+      className
+    )}
   >
     {children}
   </button>
@@ -88,9 +94,10 @@ const TabsContent = ({
 
   return (
     <div
-      className={`mt-2 ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 ${
-        className || ""
-      }`}
+      className={cn(
+        "mt-4 ring-offset-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2",
+        className
+      )}
     >
       {children}
     </div>

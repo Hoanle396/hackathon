@@ -21,6 +21,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -83,6 +84,8 @@ export default function TeamDetailPage() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   useEffect(() => {
     fetchTeamData();
@@ -204,6 +207,38 @@ export default function TeamDetailPage() {
     setTimeout(() => setCopiedToken(null), 3000);
   };
 
+  const handleDeleteClick = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    setDeleting(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/teams/${teamId}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to delete team");
+      }
+
+      toast.success("Team deleted successfully!");
+      setShowDeleteDialog(false);
+      router.push("/dashboard/teams");
+    } catch (error: any) {
+      console.error("Delete team error:", error);
+      toast.error(error.message || "Failed to delete team");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const getPlanVariant = (plan: string) => {
     switch (plan) {
       case "FREE":
@@ -252,29 +287,29 @@ export default function TeamDetailPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 md:space-y-8">
       {/* Back Button */}
       <Button
         variant="ghost"
         onClick={() => router.back()}
-        className="mb-8 text-zinc-400 hover:text-white hover:bg-zinc-900/70"
+        className="text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Teams
       </Button>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-10">
-        <div className="flex items-center gap-5">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-800 flex items-center justify-center shadow-xl">
-            <Users className="h-8 w-8 text-zinc-300" />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6 pb-4 sm:pb-6 border-b border-zinc-800/50">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-900/50 flex items-center justify-center">
+            <Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
               {team.name}
             </h1>
             {team.description && (
-              <p className="text-zinc-400 mt-2 text-lg">{team.description}</p>
+              <p className="text-zinc-400 mt-1 sm:mt-1.5 text-sm sm:text-base">{team.description}</p>
             )}
           </div>
         </div>
@@ -546,8 +581,11 @@ export default function TeamDetailPage() {
             </CardHeader>
             <CardContent>
               <Button
+                type="button"
                 variant="destructive"
                 size="lg"
+                onClick={handleDeleteClick}
+                disabled={deleting}
                 className="bg-red-600 hover:bg-red-700"
               >
                 <Trash2 className="h-5 w-5 mr-2" />
@@ -557,6 +595,48 @@ export default function TeamDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-md p-6">
+          <DialogHeader className="space-y-3">
+            <div className="mx-auto w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
+              <AlertCircle className="h-6 w-6 text-red-500" />
+            </div>
+            <DialogTitle className="text-xl font-bold text-white text-center">
+              Delete Team?
+            </DialogTitle>
+            <DialogDescription className="text-zinc-400 text-center text-sm">
+              You're about to delete <span className="font-semibold text-white">"{team?.name}"</span>. This will permanently remove all team data, projects, and members.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <div className="p-3 rounded-lg bg-red-500/5 border border-red-500/20">
+              <p className="text-red-400 text-xs text-center font-medium">
+                ⚠️ This action cannot be undone
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="flex-row gap-3 sm:gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={deleting}
+              className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteConfirm}
+              disabled={deleting}
+              className="flex-1 bg-red-600 hover:bg-red-700"
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Invite Dialog */}
       <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>

@@ -383,18 +383,18 @@ export default function BillingPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto py-8 space-y-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 md:space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-        <div className="flex items-center gap-5">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-800 flex items-center justify-center shadow-xl">
-            <DollarSign className="h-8 w-8 text-zinc-300" />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6 pb-4 sm:pb-6 border-b border-zinc-800/50">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-900/50 flex items-center justify-center">
+            <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
               Billing & Subscription
             </h1>
-            <p className="text-zinc-400 mt-2 text-lg">
+            <p className="text-zinc-400 mt-1 sm:mt-1.5 text-sm sm:text-base">
               Manage your plan and pay securely with USDC
             </p>
           </div>

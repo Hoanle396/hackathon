@@ -66,34 +66,38 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 space-y-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 md:space-y-8">
       {/* Header */}
-      <div className="flex items-center gap-5">
-        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-800 flex items-center justify-center shadow-xl">
-          <Settings className="h-8 w-8 text-zinc-300" />
-        </div>
-        <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
-            Settings
-          </h1>
-          <p className="text-zinc-400 mt-2 text-lg">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 pb-4 sm:pb-6 border-b border-zinc-800/50">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-900/50 flex items-center justify-center flex-shrink-0">
+            <Settings className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+          </div>
+          <div className="space-y-1">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
+              Settings
+            </h1>
+            <p className="text-zinc-400 text-sm sm:text-base">
             Manage your account and integration tokens
           </p>
         </div>
+        </div>  
       </div>
 
       {/* Account Information */}
-      <Card className="bg-zinc-900/50 backdrop-blur-sm border-zinc-800 shadow-xl">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3 text-white">
-            <User className="h-6 w-6" />
+      <Card className="bg-zinc-900/70 border-zinc-800 backdrop-blur-sm hover:border-zinc-600 shadow-2xl transition-all duration-300">
+        <CardHeader className="border-b border-zinc-800/50 pb-5 pt-6">
+          <CardTitle className="flex items-center gap-3 text-white text-2xl">
+            <div className="p-2 rounded-lg bg-zinc-800">
+              <User className="h-5 w-5" />
+            </div>
             Account Information
           </CardTitle>
-          <CardDescription className="text-zinc-400">
+          <CardDescription className="text-zinc-400 text-sm mt-3">
             Your personal details
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row items-center gap-8">
             <Avatar className="h-24 w-24 ring-4 ring-zinc-700 ring-offset-4 ring-offset-black">
               <AvatarFallback className="bg-gradient-to-br from-zinc-600 to-zinc-800 text-3xl font-bold text-white">
@@ -123,29 +127,28 @@ export default function SettingsPage() {
       </Card>
 
       {/* API Tokens */}
-      <Card className="bg-zinc-900/50 backdrop-blur-sm border-zinc-800 shadow-xl">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <Key className="h-6 w-6 text-zinc-400" />
-            <div>
-              <CardTitle className="text-white">Integration Tokens</CardTitle>
-              <CardDescription className="text-zinc-400">
-                Configure tokens to allow AI to post comments and send
-                notifications
-              </CardDescription>
+      <Card className="bg-zinc-900/70 border-zinc-800 backdrop-blur-sm hover:border-zinc-600 shadow-2xl transition-all duration-300">
+        <CardHeader className="border-b border-zinc-800/50 pb-5 pt-6">
+          <CardTitle className="flex items-center gap-3 text-white text-2xl">
+            <div className="p-2 rounded-lg bg-zinc-800">
+              <Key className="h-5 w-5" />
             </div>
-          </div>
+            Integration Tokens
+          </CardTitle>
+          <CardDescription className="text-zinc-400 text-sm mt-3">
+            Configure tokens to allow AI to post comments and send notifications
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        <CardContent className="pt-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* GitHub Token */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label htmlFor="githubToken" className="text-zinc-200 text-lg">
+                <Label htmlFor="githubToken" className="text-zinc-200 text-sm font-semibold">
                   GitHub Personal Access Token
                 </Label>
                 {user.hasGithubToken && (
-                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50">
+                  <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 font-semibold">
                     <CheckCircle className="h-4 w-4 mr-1" />
                     Configured
                   </Badge>
@@ -155,10 +158,11 @@ export default function SettingsPage() {
                 id="githubToken"
                 type="password"
                 placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                className="bg-zinc-800/50 border-zinc-700 focus:border-zinc-500 text-white placeholder-zinc-500 font-mono"
+                className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 font-mono h-12 transition-all"
                 {...register("githubToken")}
               />
-              <p className="text-sm text-zinc-500">
+              <p className="text-xs text-zinc-500 flex items-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
                 Create at:{" "}
                 <a
                   href="https://github.com/settings/tokens"
@@ -177,11 +181,11 @@ export default function SettingsPage() {
             {/* GitLab Token */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label htmlFor="gitlabToken" className="text-zinc-200 text-lg">
+                <Label htmlFor="gitlabToken" className="text-zinc-200 text-sm font-semibold">
                   GitLab Personal Access Token
                 </Label>
                 {user.hasGitlabToken && (
-                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50">
+                  <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 font-semibold">
                     <CheckCircle className="h-4 w-4 mr-1" />
                     Configured
                   </Badge>
@@ -191,10 +195,11 @@ export default function SettingsPage() {
                 id="gitlabToken"
                 type="password"
                 placeholder="glpat-xxxxxxxxxxxxxxxxxxxx"
-                className="bg-zinc-800/50 border-zinc-700 focus:border-zinc-500 text-white placeholder-zinc-500 font-mono"
+                className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 font-mono h-12 transition-all"
                 {...register("gitlabToken")}
               />
-              <p className="text-sm text-zinc-500">
+              <p className="text-xs text-zinc-500 flex items-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
                 Create at:{" "}
                 <a
                   href="https://gitlab.com/-/profile/personal_access_tokens"
@@ -215,12 +220,12 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <Label
                   htmlFor="discordBotToken"
-                  className="text-zinc-200 text-lg"
+                  className="text-zinc-200 text-sm font-semibold"
                 >
                   Discord Bot Token (Optional)
                 </Label>
                 {user.hasDiscordBotToken && (
-                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50">
+                  <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 font-semibold">
                     <CheckCircle className="h-4 w-4 mr-1" />
                     Configured
                   </Badge>
@@ -230,10 +235,11 @@ export default function SettingsPage() {
                 id="discordBotToken"
                 type="password"
                 placeholder="MTAxMjM0NTY3ODkwMTIzNDU2Nw.GABCDE.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                className="bg-zinc-800/50 border-zinc-700 focus:border-zinc-500 text-white placeholder-zinc-500 font-mono"
+                className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 font-mono h-12 transition-all"
                 {...register("discordBotToken")}
               />
-              <p className="text-sm text-zinc-500">
+              <p className="text-xs text-zinc-500 flex items-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
                 Create bot at:{" "}
                 <a
                   href="https://discord.com/developers/applications"
@@ -249,18 +255,20 @@ export default function SettingsPage() {
             </div>
 
             {/* Submit Button */}
-            <Button
-              type="submit"
-              disabled={loading}
-              size="lg"
-              className={cn(
-                "w-full sm:w-auto px-12 bg-gradient-to-r from-white to-zinc-400 text-black font-semibold shadow-lg hover:shadow-xl hover:from-zinc-200 hover:to-zinc-500 transition-all duration-300",
-                loading && "opacity-80 cursor-not-allowed"
-              )}
-            >
-              <Save className="h-5 w-5 mr-2" />
-              {loading ? "Saving Changes..." : "Save Tokens"}
-            </Button>
+            <div className="pt-4">
+              <Button
+                type="submit"
+                disabled={loading}
+                size="lg"
+                className={cn(
+                  "w-full sm:w-auto px-12 bg-white text-black font-semibold shadow-lg hover:shadow-xl hover:bg-zinc-200 transition-all duration-300 h-12",
+                  loading && "opacity-60 cursor-not-allowed"
+                )}
+              >
+                <Save className="h-5 w-5 mr-2" />
+                {loading ? "Saving Changes..." : "Save Tokens"}
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>

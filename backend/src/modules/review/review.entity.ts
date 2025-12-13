@@ -55,14 +55,14 @@ export class Review {
   @Column({ type: 'json', nullable: true })
   aiAnalysis?: Record<string, any>;
 
-  @ManyToOne(() => Project, (project) => project.reviews)
+  @ManyToOne(() => Project, (project) => project.reviews, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'projectId' })
   project: Project;
 
   @Column()
   projectId: string;
 
-  @OneToMany(() => ReviewComment, (comment) => comment.review)
+  @OneToMany(() => ReviewComment, (comment) => comment.review, { cascade: true, onDelete: 'CASCADE' })
   comments: ReviewComment[];
 
   @CreateDateColumn()

@@ -61,78 +61,81 @@ export default function NewTeamPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 md:space-y-6">
       {/* Back Button */}
       <Button
         variant="ghost"
         onClick={() => router.back()}
-        className="mb-8 text-zinc-400 hover:text-white hover:bg-zinc-900/70 transition-colors"
+        className="text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Teams
       </Button>
 
       {/* Main Card */}
-      <Card className="bg-zinc-900/50 backdrop-blur-sm border-zinc-800 shadow-xl">
-        <CardHeader className="pb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-800 flex items-center justify-center shadow-lg">
-              <Users className="h-6 w-6 text-zinc-300" />
+      <Card className="bg-zinc-900/50 backdrop-blur-sm border-zinc-800 shadow-2xl hover:border-zinc-700 transition-colors">
+        <CardHeader className="pb-6 md:pb-8 border-b border-zinc-800/50">
+          <div className="space-y-2 sm:space-y-3">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-800 flex items-center justify-center shadow-lg ring-2 ring-zinc-700 flex-shrink-0">
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-zinc-300" />
+              </div>
+              <CardTitle className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
+                Create New Team
+              </CardTitle>
             </div>
-            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
-              Create New Team
-            </CardTitle>
+            <CardDescription className="text-zinc-400 text-sm sm:text-base flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 flex-shrink-0"></span>
+              Set up a new team to invite members, manage projects, and collaborate efficiently
+            </CardDescription>
           </div>
-          <CardDescription className="text-zinc-400 text-lg">
-            Set up a new team to invite members, manage projects, and
-            collaborate efficiently
-          </CardDescription>
         </CardHeader>
 
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <CardContent className="pt-8">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             {/* Team Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-zinc-200">
+            <div className="space-y-3">
+              <Label htmlFor="name" className="text-zinc-200 text-sm font-semibold">
                 Team Name <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="name"
                 placeholder="e.g. Engineering, Design Team, Startup Crew..."
-                className="bg-zinc-800/50 border-zinc-700 focus:border-zinc-500 text-white placeholder-zinc-500 transition-colors"
+                className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 h-12 transition-all"
                 {...register("name", { required: "Team name is required" })}
               />
               {errors.name && (
-                <p className="text-sm text-red-500">{errors.name.message}</p>
+                <p className="text-sm text-red-500 flex items-center gap-2">{errors.name.message}</p>
               )}
             </div>
 
             {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description" className="text-zinc-200">
+            <div className="space-y-3">
+              <Label htmlFor="description" className="text-zinc-200 text-sm font-semibold">
                 Description <span className="text-zinc-500">(Optional)</span>
               </Label>
               <Textarea
                 id="description"
                 placeholder="Briefly describe the purpose of this team, who it's for, or any key details..."
                 rows={5}
-                className="bg-zinc-800/50 border-zinc-700 focus:border-zinc-500 text-white placeholder-zinc-500 resize-none transition-colors"
+                className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 resize-none transition-all"
                 {...register("description")}
               />
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-zinc-500 flex items-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
                 Helps team members understand the team's focus and goals
               </p>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-6">
+            <div className="flex flex-col sm:flex-row gap-4 pt-8">
               <Button
                 type="submit"
                 disabled={loading}
                 size="lg"
                 className={cn(
-                  "flex-1 bg-gradient-to-r from-white to-zinc-400 text-black font-semibold shadow-lg hover:shadow-xl hover:from-zinc-200 hover:to-zinc-500 transition-all duration-300",
-                  loading && "opacity-80 cursor-not-allowed"
+                  "flex-1 bg-white text-black font-semibold shadow-lg hover:shadow-xl hover:bg-zinc-200 transition-all duration-300 h-12",
+                  loading && "opacity-60 cursor-not-allowed"
                 )}
               >
                 <Plus className="h-5 w-5 mr-2" />
@@ -144,7 +147,7 @@ export default function NewTeamPage() {
                 variant="outline"
                 size="lg"
                 onClick={() => router.back()}
-                className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+                className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white hover:border-zinc-600 transition-all h-12"
               >
                 Cancel
               </Button>
