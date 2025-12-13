@@ -32,8 +32,14 @@ export class WebhookController {
 
     if (event === 'pull_request') {
       await this.webhookService.handlePullRequestEvent(payload, 'github');
-    } else if (event === 'pull_request_review_comment') {
+    } else if (event === 'pull_request_review_comment' || event === 'issue_comment') {
+      // Handle both review comments (inline) and issue comments (general PR comments)
       await this.webhookService.handleCommentEvent(payload, 'github');
+    } else if (event === 'pull_request_review') {
+      // Handle review submissions
+      this.logger.log('Review event received but not processing yet');
+    } else {
+      this.logger.log(`Unhandled GitHub event: ${event}`);
     }
 
     return { message: 'Webhook processed' };
@@ -55,8 +61,11 @@ export class WebhookController {
 
     if (event === 'Merge Request Hook') {
       await this.webhookService.handlePullRequestEvent(payload, 'gitlab');
-    } else if (event === 'Note Hook') {
+    } else if (event === 'Note Hook' || event === 'Comment') {
+      // Handle both merge request notes and general comments
       await this.webhookService.handleCommentEvent(payload, 'gitlab');
+    } else {
+      this.logger.log(`Unhandled GitLab event: ${event}`);
     }
 
     return { message: 'Webhook processed' };

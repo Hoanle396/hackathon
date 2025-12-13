@@ -631,26 +631,74 @@ Good Comment: ${example.aiComment}
   ): Promise<string> {
     const systemPrompt = `You are an AI Code Reviewer assistant. Reply to user comments professionally, helpfully, and respectfully.
 
-Guidelines:
-- Be humble and open to feedback
-- Provide clear explanations when asked
-- Acknowledge if you made a mistake
-- Offer alternative solutions when appropriate
-- Keep responses concise but thorough`;
+**Your personality:**
+- Professional but friendly
+- Humble and open to feedback
+- Clear and concise communicator
+- Knowledgeable but not arrogant
+
+**Response guidelines:**
+1. Acknowledge user's input first
+2. If they're correcting you: Admit mistake gracefully and thank them
+3. If they're asking questions: Provide clear, detailed explanation
+4. If they disagree: Respect their opinion and explain your reasoning
+5. If they're adding context: Incorporate it into your understanding
+6. Always be constructive and helpful
+
+**Tone:**
+- Use emojis sparingly (only when appropriate)
+- Be conversational but professional
+- Keep responses focused and to-the-point
+- Avoid being defensive or argumentative`;
 
     const userPrompt = `
-**User's comment:** ${userComment}
+**User's comment:** 
+${userComment}
 
-**Code context:**
-File: ${context.fileName}
+${context.pullRequestTitle ? `**PR Context:** ${context.pullRequestTitle}` : ''}
+
+${context.fileName ? `**File:** ${context.fileName}` : ''}
+
+${context.codeSnippet ? `**Code context:**
 \`\`\`
 ${context.codeSnippet}
 \`\`\`
+` : ''}
 
-Provide an appropriate response. If the user is correcting you or providing feedback, acknowledge it and learn from it. If they're asking for clarification, explain clearly.
+**Instructions:**
+Analyze the user's comment and provide an appropriate response:
+- If it's feedback on your review → Acknowledge and learn
+- If it's a question → Answer clearly with examples if needed
+- If it's additional context → Thank them and adjust your understanding
+- If it's a disagreement → Explain your reasoning politely
+- If it's asking for changes → Suggest concrete next steps
+
+Keep your response focused and under 200 words unless more detail is needed.
 `;
 
-    const replies = await this.callAiApi(systemPrompt, userPrompt);
-    return replies.join('\n');
+    try {
+      const openRouterModule = await dynamicImport<typeof OpenRouter>('@openrouter/sdk');
+      const openRouter = new openRouterModule.OpenRouter({
+        apiKey: this.configService.get('OPENROUTER_API_KEY'),
+      });
+
+      const completion = await openRouter.chat.send({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
+        temperature: 0.7,
+        stream: false,
+      });
+
+      const response = completion.choices[0].message.content as string;
+      console.log('AI Reply generated:', response);
+
+      return response;
+    } catch (error) {
+      console.error('AI Reply generation failed:', error);
+      return `Thanks for your comment! I appreciate the feedback. Let me know if you have any other questions or concerns.`;
+    }
   }
 }

@@ -90,22 +90,77 @@ export class WebhookService {
 
   async handleCommentEvent(payload: any, source: 'github' | 'gitlab') {
     try {
-      const commentData = this.extractCommentData(payload, source);
+      this.logger.log(`Handling comment event from ${source}`);
+      
+      const commentData = await this.extractCommentData(payload, source);
+
+      if (!commentData) {
+        this.logger.warn('Failed to extract comment data');
+        return;
+      }
+
+      this.logger.log(`Comment from ${commentData.author}: ${commentData.content.substring(0, 100)}...`);
 
       // Tìm review tương ứng
       const reviews = await this.reviewService.findReviewsByProject(
         commentData.projectId,
       );
       const review = reviews.find(
-        (r) => r.pullRequestId === commentData.pullRequestId,
+        (r) => r.pullRequestNumber.toString() === commentData.pullRequestNumber.toString(),
       );
 
       if (!review) {
-        this.logger.log('Review not found for comment');
+        this.logger.log('Review not found for comment, creating placeholder');
+        // Create a minimal review entry if not exists
+        const project = await this.projectRepository.findOne({
+          where: { id: commentData.projectId },
+          relations: ['user'],
+        });
+        
+        if (!project) {
+          this.logger.error('Project not found');
+          return;
+        }
+      
+
+        const newReview = await this.reviewService.createReview({
+          projectId: commentData.projectId,
+          pullRequestId: commentData.pullRequestId,
+          pullRequestNumber: commentData.pullRequestNumber,
+          pullRequestTitle: 'Comment Thread',
+          pullRequestUrl: '',
+          branch: 'unknown',
+          author: commentData.author,
+        });
+        
+        return this.handleCommentWithReview(newReview, commentData, source, project);
+      }
+
+      const project = await this.projectRepository.findOne({
+        where: { id: review.projectId },
+        relations: ['user'],
+      });
+
+      if (!project) {
+        this.logger.error('Project not found');
         return;
       }
 
-      // Lưu comment
+      return this.handleCommentWithReview(review, commentData, source, project);
+    } catch (error) {
+      this.logger.error('Error handling comment event:', error);
+    }
+  }
+
+  private async handleCommentWithReview(
+    review: any,
+    commentData: any,
+    source: 'github' | 'gitlab',
+    project: any,
+  ) {
+    try {
+
+      // Lưu user comment
       await this.reviewService.createComment({
         reviewId: review.id,
         externalCommentId: commentData.commentId,
@@ -115,10 +170,27 @@ export class WebhookService {
         lineNumber: commentData.lineNumber,
         author: commentData.author,
         parentCommentId: commentData.parentCommentId,
+        metadata: {
+          position: commentData.position,
+          commitId: commentData.commitId,
+        },
       });
 
-      // Nếu comment reply AI comment, thì train lại
+      this.logger.log(`Saved user comment from ${commentData.author}`);
+
+      // Check if should reply (reply to AI or mention bot)
+      const shouldReply = commentData.isReplyToAi || 
+                         commentData.content.includes('@ai-reviewer') ||
+                         commentData.content.includes('@bot');
+
+      if (!shouldReply) {
+        this.logger.log('No AI reply needed');
+        return;
+      }
+
+      // Process feedback if replying to AI
       if (commentData.isReplyToAi) {
+        this.logger.log('Processing user feedback for training');
         await this.trainingService.processUserFeedback(
           review.projectId,
           commentData.content,
@@ -127,46 +199,63 @@ export class WebhookService {
         );
       }
 
-      // Generate AI reply nếu cần
-      const project = await this.projectRepository.findOne({
-        where: { id: review.projectId },
-        relations: ['user'],
-      });
+      // Generate AI reply
+      this.logger.log('Generating AI reply...');
+      const aiReply = await this.aiService.generateReply(
+        commentData.content,
+        {
+          businessContext: project.businessContext,
+          reviewRules: project.reviewRules,
+          codeSnippet: commentData.codeSnippet,
+          fileName: commentData.filePath,
+          pullRequestTitle: review.pullRequestTitle,
+        },
+      );
 
-      if (project && commentData.isReplyToAi) {
-        const aiReply = await this.aiService.generateReply(
-          commentData.content,
-          {
-            businessContext: project.businessContext,
-            reviewRules: project.reviewRules,
-            codeSnippet: commentData.codeSnippet,
-            fileName: commentData.filePath,
-          },
-        );
+      this.logger.log(`AI reply generated: ${aiReply.substring(0, 100)}...`);
 
-        // Post reply
-        await this.postComment(
+      // Post reply to GitHub/GitLab
+      if (commentData.lineNumber && commentData.filePath) {
+        // Reply to inline comment
+        await this.postReplyToComment(
           project,
-          commentData.pullRequestId,
+          commentData.pullRequestNumber.toString(),
+          commentData.commentId,
           aiReply,
           commentData.filePath,
           commentData.lineNumber,
           source,
         );
-
-        // Save AI reply
-        await this.reviewService.createComment({
-          reviewId: review.id,
-          externalCommentId: `ai-reply-${Date.now()}`,
-          type: CommentType.AI_REPLY,
-          content: aiReply,
-          filePath: commentData.filePath,
-          lineNumber: commentData.lineNumber,
-          parentCommentId: commentData.commentId,
-        });
+      } else {
+        // Reply to general comment
+        await this.postComment(
+          project,
+          commentData.pullRequestNumber.toString(),
+          `@${commentData.author} ${aiReply}`,
+          null,
+          null,
+          source,
+        );
       }
+
+      // Save AI reply
+      await this.reviewService.createComment({
+        reviewId: review.id,
+        externalCommentId: `ai-reply-${Date.now()}-${Math.random()}`,
+        type: CommentType.AI_REPLY,
+        content: aiReply,
+        filePath: commentData.filePath,
+        lineNumber: commentData.lineNumber,
+        author: 'ai-bot',
+        parentCommentId: commentData.commentId,
+        metadata: {
+          inReplyTo: commentData.author,
+        },
+      });
+
+      this.logger.log('✅ AI reply posted successfully');
     } catch (error) {
-      this.logger.error('Error handling comment event:', error);
+      this.logger.error('Error handling comment with review:', error);
     }
   }
 
@@ -596,6 +685,70 @@ export class WebhookService {
     }
   }
 
+  /**
+   * Post reply to a specific comment (threaded reply)
+   */
+  private async postReplyToComment(
+    project: Project,
+    pullRequestId: string,
+    commentId: string,
+    reply: string,
+    filePath: string,
+    lineNumber: number,
+    source: 'github' | 'gitlab',
+  ) {
+    try {
+      if (source === 'github') {
+        const octokit = new Octokit({
+          auth: project.user.githubToken,
+        });
+
+        const [owner, repo] = this.parseGithubUrl(project.repositoryUrl);
+
+        // Reply to review comment (creates threaded reply)
+        await octokit.pulls.createReplyForReviewComment({
+          owner,
+          repo,
+          pull_number: parseInt(pullRequestId),
+          comment_id: parseInt(commentId),
+          body: reply,
+        });
+
+        this.logger.log(`✅ Posted reply to comment ${commentId}`);
+      } else if (source === 'gitlab') {
+        const api = new Gitlab({
+          token: project.user.gitlabToken,
+          host: !project.repositoryUrl.includes('gitlab.com') ? 'https://gitlab.var-meta.com' : undefined,
+        });
+
+        const projectId = this.parseGitlabUrl(project.repositoryUrl);
+
+        // Reply in the same discussion thread
+        await api.MergeRequestNotes.create(
+          projectId,
+          parseInt(pullRequestId),
+          reply,
+          {
+            discussion_id: commentId,
+          },
+        );
+
+        this.logger.log(`✅ Posted reply to comment ${commentId}`);
+      }
+    } catch (error) {
+      this.logger.error(`Failed to post reply to comment ${commentId}:`, error);
+      // Fallback to general comment
+      await this.postComment(
+        project,
+        pullRequestId,
+        `> Replying to comment on **${filePath}:${lineNumber}**\n\n${reply}`,
+        null,
+        null,
+        source,
+      );
+    }
+  }
+
   private async postComment(
     project: Project,
     pullRequestId: string,
@@ -690,21 +843,166 @@ export class WebhookService {
     }
   }
 
-  private extractCommentData(payload: any, source: 'github' | 'gitlab') {
-    // TODO: Implement comment data extraction
-    return {
-      projectId: '',
-      pullRequestId: '',
-      commentId: '',
-      content: '',
-      filePath: '',
-      lineNumber: null,
-      author: '',
-      parentCommentId: null,
-      isReplyToAi: false,
-      codeSnippet: '',
-      aiComment: '',
-    };
+  private async extractCommentData(payload: any, source: 'github' | 'gitlab') {
+    if (source === 'github') {
+      // GitHub comment event
+      const comment = payload.comment;
+      const issue = payload.issue || payload.pull_request;
+      
+      // Check if it's a review comment (inline) or issue comment (general)
+      const isReviewComment = !!comment.path;
+      
+      // Get the PR from repository
+      const repositoryUrl = payload.repository.html_url;
+      const project = await this.projectRepository.findOne({
+        where: { repositoryUrl },
+        relations: ['user'],
+      });
+
+      if (!project) {
+        this.logger.warn('Project not found for repository:', repositoryUrl);
+        return null;
+      }
+
+      // Check if this is a reply to AI comment
+      let isReplyToAi = false;
+      let aiComment = '';
+      let parentCommentId = null;
+      
+      // For review comments, check if replying to AI
+      if (comment.in_reply_to_id) {
+        parentCommentId = comment.in_reply_to_id.toString();
+        // Check if parent comment is from AI
+        const parentComment = await this.reviewService.getCommentsByReview(project.id);
+        const aiParent = parentComment.find(
+          c => c.externalCommentId === parentCommentId && c.type === CommentType.AI_GENERATED
+        );
+        if (aiParent) {
+          isReplyToAi = true;
+          aiComment = aiParent.content;
+        }
+      }
+
+      // Get code snippet for context
+      let codeSnippet = '';
+      if (isReviewComment && comment.path) {
+        try {
+          const octokit = new Octokit({ auth: project.user.githubToken });
+          const [owner, repo] = this.parseGithubUrl(repositoryUrl);
+          const { data: fileData } = await octokit.repos.getContent({
+            owner,
+            repo,
+            path: comment.path,
+            ref: comment.commit_id,
+          });
+          if ('content' in fileData) {
+            const fullContent = Buffer.from(fileData.content, 'base64').toString('utf-8');
+            const lines = fullContent.split('\n');
+            const startLine = Math.max(0, (comment.line || comment.original_line) - 5);
+            const endLine = Math.min(lines.length, (comment.line || comment.original_line) + 5);
+            codeSnippet = lines.slice(startLine, endLine).join('\n');
+          }
+        } catch (error) {
+          this.logger.warn('Failed to fetch code snippet:', error.message);
+        }
+      }
+
+      return {
+        projectId: project.id,
+        pullRequestId: issue.id.toString(),
+        pullRequestNumber: issue.number,
+        commentId: comment.id.toString(),
+        content: comment.body,
+        filePath: comment.path || null,
+        lineNumber: comment.line || comment.original_line || null,
+        position: comment.position || null,
+        author: comment.user.login,
+        parentCommentId,
+        isReplyToAi,
+        codeSnippet,
+        aiComment,
+        commitId: comment.commit_id,
+      };
+    } else {
+      // GitLab comment event
+      const note = payload.object_attributes;
+      const mergeRequest = payload.merge_request;
+      
+      const projectId = payload.project.id;
+      const project = await this.projectRepository.findOne({
+        where: { repositoryUrl: payload.project.web_url },
+        relations: ['user'],
+      });
+
+      if (!project) {
+        this.logger.warn('Project not found for GitLab project:', projectId);
+        return null;
+      }
+
+      // Check if it's a discussion note (inline comment)
+      const isInlineComment = note.type === 'DiffNote';
+      
+      // Check if replying to AI
+      let isReplyToAi = false;
+      let aiComment = '';
+      let parentCommentId = null;
+
+      if (note.discussion_id) {
+        // Check if discussion contains AI comment
+        const comments = await this.reviewService.getCommentsByReview(project.id);
+        const aiParent = comments.find(
+          c => c.externalCommentId.includes(note.discussion_id) && c.type === CommentType.AI_GENERATED
+        );
+        if (aiParent) {
+          isReplyToAi = true;
+          aiComment = aiParent.content;
+          parentCommentId = aiParent.externalCommentId;
+        }
+      }
+
+      // Get code snippet
+      let codeSnippet = '';
+      if (isInlineComment && note.position) {
+        try {
+          const api = new Gitlab({
+            token: project.user.gitlabToken,
+            host: !project.repositoryUrl.includes('gitlab.com') ? 'https://gitlab.var-meta.com' : undefined,
+          });
+          
+          const fileContent = await api.RepositoryFiles.show(
+            projectId,
+            note.position.new_path,
+            note.position.head_sha,
+          );
+          
+          const fullContent = Buffer.from(fileContent.content, 'base64').toString('utf-8');
+          const lines = fullContent.split('\n');
+          const lineNum = note.position.new_line || note.position.old_line;
+          const startLine = Math.max(0, lineNum - 5);
+          const endLine = Math.min(lines.length, lineNum + 5);
+          codeSnippet = lines.slice(startLine, endLine).join('\n');
+        } catch (error) {
+          this.logger.warn('Failed to fetch code snippet:', error.message);
+        }
+      }
+
+      return {
+        projectId: project.id,
+        pullRequestId: mergeRequest.iid.toString(),
+        pullRequestNumber: mergeRequest.iid,
+        commentId: note.id.toString(),
+        content: note.note,
+        filePath: note.position?.new_path || note.position?.old_path || null,
+        lineNumber: note.position?.new_line || note.position?.old_line || null,
+        position: note.position,
+        author: payload.user.username,
+        parentCommentId,
+        isReplyToAi,
+        codeSnippet,
+        aiComment,
+        commitId: note.commit_id,
+      };
+    }
   }
 
   private async findProjectByRepository(url: string, type: ProjectType) {
