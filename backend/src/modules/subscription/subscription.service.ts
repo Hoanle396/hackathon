@@ -5,6 +5,7 @@ import { Subscription, SubscriptionPlan, SubscriptionStatus } from './subscripti
 import { Payment, PaymentStatus } from './payment.entity';
 import { CreateSubscriptionDto, UpdateSubscriptionDto } from './dto/subscription.dto';
 import { Web3PaymentService } from './web3-payment.service';
+import { Team } from '../team/team.entity';
 
 const PLAN_PRICING = {
   [SubscriptionPlan.FREE]: {
@@ -49,6 +50,7 @@ export class SubscriptionService {
       where: createSubscriptionDto.teamId
         ? { teamId: createSubscriptionDto.teamId }
         : { userId },
+      relations: ['team'],
     });
 
     // If subscription exists, update it instead
@@ -76,7 +78,24 @@ export class SubscriptionService {
         : SubscriptionStatus.TRIALING,
     });
 
-    return await this.subscriptionRepository.save(subscription);
+    const savedSubscription = await this.subscriptionRepository.save(subscription);
+
+    // Update team entity if this is a team subscription
+    if (createSubscriptionDto.teamId) {
+      const team = await this.subscriptionRepository.manager.findOne(Team, {
+        where: { id: createSubscriptionDto.teamId },
+      });
+      
+      if (team) {
+        team.plan = createSubscriptionDto.plan as any;
+        team.maxProjects = planDetails.maxProjects;
+        team.maxMembers = planDetails.maxMembers;
+        team.monthlyReviewLimit = planDetails.monthlyReviewLimit;
+        await this.subscriptionRepository.manager.save(Team, team);
+      }
+    }
+
+    return savedSubscription;
   }
 
   async findByUser(userId: string) {
@@ -112,15 +131,47 @@ export class SubscriptionService {
   }
 
   async findByTeam(teamId: string) {
-    return await this.subscriptionRepository.findOne({
+    let subscription = await this.subscriptionRepository.findOne({
       where: { teamId },
       relations: ['team'],
     });
+
+    // Auto-create FREE subscription for new teams
+    if (!subscription) {
+      const planDetails = PLAN_PRICING[SubscriptionPlan.FREE];
+      const now = new Date();
+      const periodEnd = new Date(now);
+      periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+      subscription = this.subscriptionRepository.create({
+        teamId,
+        plan: SubscriptionPlan.FREE,
+        price: planDetails.price,
+        maxProjects: planDetails.maxProjects,
+        maxMembers: planDetails.maxMembers,
+        monthlyReviewLimit: planDetails.monthlyReviewLimit,
+        currentPeriodStart: now,
+        currentPeriodEnd: periodEnd,
+        status: SubscriptionStatus.ACTIVE,
+        billingCycle: 'monthly',
+      });
+
+      subscription = await this.subscriptionRepository.save(subscription);
+      
+      // Load the team relation
+      subscription = await this.subscriptionRepository.findOne({
+        where: { id: subscription.id },
+        relations: ['team'],
+      });
+    }
+
+    return subscription;
   }
 
   async update(id: string, updateSubscriptionDto: UpdateSubscriptionDto) {
     const subscription = await this.subscriptionRepository.findOne({
       where: { id },
+      relations: ['team'],
     });
 
     if (!subscription) {
@@ -151,10 +202,35 @@ export class SubscriptionService {
         }
         subscription.currentPeriodEnd = periodEnd;
       }
+
+      // Also update the team's plan and limits if this is a team subscription
+      if (subscription.teamId) {
+        // Fetch team if not loaded
+        let team = subscription.team;
+        if (!team) {
+          team = await this.subscriptionRepository.manager.findOne(Team, {
+            where: { id: subscription.teamId },
+          });
+        }
+        
+        if (team) {
+          team.plan = subscription.plan as any;
+          team.maxProjects = planDetails.maxProjects;
+          team.maxMembers = planDetails.maxMembers;
+          team.monthlyReviewLimit = planDetails.monthlyReviewLimit;
+          await this.subscriptionRepository.manager.save(Team, team);
+        }
+      }
     }
 
     if (updateSubscriptionDto.billingCycle) {
       subscription.billingCycle = updateSubscriptionDto.billingCycle;
+    }
+
+    // Handle teamId update (moving subscription between personal and team)
+    if (updateSubscriptionDto.teamId !== undefined) {
+      subscription.teamId = updateSubscriptionDto.teamId || null;
+      subscription.userId = updateSubscriptionDto.teamId ? null : subscription.userId;
     }
 
     return await this.subscriptionRepository.save(subscription);
@@ -255,45 +331,115 @@ export class SubscriptionService {
     return { message: 'Monthly usage reset successfully' };
   }
 
-  async createPayment(
+  /**
+   * Create payment request with salt (step 1)
+   */
+  async createPaymentRequest(
+    userId: string,
     subscriptionId: string,
     amount: number,
-    walletAddress: string,
-    metadata?: Record<string, any>,
   ) {
+    // Validate subscription exists
+    const subscription = await this.subscriptionRepository.findOne({
+      where: { id: subscriptionId },
+    });
+
+    if (!subscription) {
+      throw new NotFoundException('Subscription not found');
+    }
+
+    // Generate payment request with salt
+    const paymentRequest = this.web3PaymentService.generatePaymentRequest(
+      userId,
+      subscriptionId,
+      amount,
+    );
+
+    // Create pending payment record
+    const payment = this.paymentRepository.create({
+      subscriptionId,
+      amount,
+      currency: 'USDT',
+      status: PaymentStatus.PENDING,
+      toAddress: this.web3PaymentService.getReceiverAddress(),
+      metadata: {
+        salt: paymentRequest.salt,
+        expiresAt: paymentRequest.expiresAt,
+      },
+    });
+
+    await this.paymentRepository.save(payment);
+
+    return {
+      paymentId: payment.id,
+      salt: paymentRequest.salt,
+      message: this.web3PaymentService.generateSignatureMessage(paymentRequest),
+      amount,
+      receiverAddress: this.web3PaymentService.getReceiverAddress(),
+      chainInfo: this.web3PaymentService.getChainInfo(),
+      expiresAt: paymentRequest.expiresAt,
+    };
+  }
+
+  /**
+   * Submit payment with signature (step 2)
+   */
+  async submitPaymentSignature(
+    paymentId: string,
+    signature: string,
+    walletAddress: string,
+  ) {
+    const payment = await this.paymentRepository.findOne({
+      where: { id: paymentId },
+    });
+
+    if (!payment) {
+      throw new NotFoundException('Payment not found');
+    }
+
+    if (payment.status !== PaymentStatus.PENDING) {
+      throw new BadRequestException('Payment already processed');
+    }
+
     // Validate wallet address
     if (!this.web3PaymentService.isValidAddress(walletAddress)) {
       throw new BadRequestException('Invalid wallet address');
     }
 
-    const payment = this.paymentRepository.create({
-      subscriptionId,
-      amount,
-      currency: 'USDC',
-      status: PaymentStatus.PENDING,
-      fromAddress: walletAddress,
-      toAddress: this.web3PaymentService.getReceiverAddress(),
-      metadata,
-    });
+    const salt = payment.metadata?.salt;
+    if (!salt) {
+      throw new BadRequestException('Invalid payment request');
+    }
 
-    const savedPayment = await this.paymentRepository.save(payment);
+    // Verify signature
+    await this.web3PaymentService.verifySignature(salt, signature, walletAddress);
+
+    // Update payment with user info
+    payment.fromAddress = walletAddress;
+    payment.metadata = {
+      ...payment.metadata,
+      signature,
+      signedAt: new Date().toISOString(),
+    };
+
+    await this.paymentRepository.save(payment);
 
     return {
-      payment: savedPayment,
-      receiverAddress: this.web3PaymentService.getReceiverAddress(),
-      supportedChains: this.web3PaymentService.getSupportedChains(),
-      amount: amount,
+      success: true,
+      message: 'Signature verified. Please send USDT to complete payment.',
+      paymentId: payment.id,
     };
   }
 
-  async verifyAndConfirmPayment(
+  /**
+   * Admin verify transaction on-chain (step 3)
+   */
+  async verifyPaymentTransaction(
     paymentId: string,
     transactionHash: string,
-    chainId: number,
   ) {
     const payment = await this.paymentRepository.findOne({
       where: { id: paymentId },
-      relations: ['subscription'],
     });
 
     if (!payment) {
@@ -304,26 +450,22 @@ export class SubscriptionService {
       throw new BadRequestException('Payment already confirmed');
     }
 
-    try {
-      // Verify the blockchain transaction
-      const verification = await this.web3PaymentService.verifyPayment(
-        transactionHash,
-        payment.amount,
-        chainId,
-      );
+    const salt = payment.metadata?.salt;
+    if (!salt) {
+      throw new BadRequestException('Invalid payment request');
+    }
 
-      if (!verification.isValid) {
-        payment.status = PaymentStatus.FAILED;
-        await this.paymentRepository.save(payment);
-        throw new BadRequestException('Payment verification failed');
-      }
+    try {
+      // Verify transaction on-chain
+      const verification = await this.web3PaymentService.verifyPaymentTransaction(
+        transactionHash,
+        salt,
+      );
 
       // Update payment with blockchain details
       payment.status = PaymentStatus.SUCCEEDED;
       payment.transactionHash = verification.transactionHash;
-      payment.fromAddress = verification.from;
-      payment.toAddress = verification.to;
-      payment.chainId = verification.chainId;
+      payment.chainId = 11155111; // Sepolia
       payment.blockNumber = verification.blockNumber;
       payment.metadata = {
         ...payment.metadata,
@@ -336,11 +478,20 @@ export class SubscriptionService {
       // Activate subscription
       const subscription = await this.subscriptionRepository.findOne({
         where: { id: payment.subscriptionId },
+        relations: ['team'],
       });
 
       if (subscription) {
+        // Get plan details to update limits
+        const planDetails = PLAN_PRICING[subscription.plan];
+        
         subscription.status = SubscriptionStatus.ACTIVE;
         subscription.walletAddress = verification.from;
+        
+        // Update plan limits based on the current plan
+        subscription.maxProjects = planDetails.maxProjects;
+        subscription.maxMembers = planDetails.maxMembers;
+        subscription.monthlyReviewLimit = planDetails.monthlyReviewLimit;
         
         // Update period dates
         const now = new Date();
@@ -355,12 +506,31 @@ export class SubscriptionService {
         subscription.currentPeriodEnd = periodEnd;
 
         await this.subscriptionRepository.save(subscription);
+
+        // Also update the team's plan and limits if this is a team subscription
+        if (subscription.teamId) {
+          // Fetch team if not loaded
+          let team = subscription.team;
+          if (!team) {
+            team = await this.subscriptionRepository.manager.findOne(Team, {
+              where: { id: subscription.teamId },
+            });
+          }
+          
+          if (team) {
+            team.plan = subscription.plan as any;
+            team.maxProjects = planDetails.maxProjects;
+            team.maxMembers = planDetails.maxMembers;
+            team.monthlyReviewLimit = planDetails.monthlyReviewLimit;
+            await this.subscriptionRepository.manager.save(Team, team);
+          }
+        }
       }
 
       return {
         success: true,
         payment,
-        verification,
+        subscription,
       };
     } catch (error) {
       payment.status = PaymentStatus.FAILED;

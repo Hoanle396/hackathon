@@ -41,6 +41,7 @@ import {
   CheckCircle,
   AlertCircle,
   Settings,
+  ArrowUpRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -313,18 +314,28 @@ export default function TeamDetailPage() {
             )}
           </div>
         </div>
-        <Badge
-          variant={getPlanVariant(team.plan)}
-          className={cn(
-            "text-lg px-4 py-2 font-semibold capitalize",
-            team.plan === "ENTERPRISE" &&
-            "bg-red-500/20 text-red-400 border-red-500/50",
-            team.plan === "PROFESSIONAL" &&
-            "bg-emerald-500/20 text-emerald-400 border-emerald-500/50"
+        <div className="flex items-center gap-3">
+          <Badge
+            variant={getPlanVariant(team.plan)}
+            className={cn(
+              "text-lg px-4 py-2 font-semibold capitalize",
+              team.plan === "ENTERPRISE" &&
+              "bg-red-500/20 text-red-400 border-red-500/50",
+              team.plan === "PROFESSIONAL" &&
+              "bg-emerald-500/20 text-emerald-400 border-emerald-500/50"
+            )}
+          >
+            {team.plan.toLowerCase()}
+          </Badge>
+          {team.plan !== "ENTERPRISE" && (
+            <Button
+              onClick={() => router.push(`/dashboard/billing?team=${teamId}`)}
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+            >
+              Upgrade Plan
+            </Button>
           )}
-        >
-          {team.plan.toLowerCase()}
-        </Badge>
+        </div>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-8">

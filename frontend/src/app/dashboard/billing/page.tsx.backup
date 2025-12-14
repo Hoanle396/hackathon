@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-hot-toast";
 import {
   Card,
@@ -14,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   CreditCard,
   TrendingUp,
@@ -26,28 +26,15 @@ import {
   ExternalLink,
   ArrowUpRight,
   Zap,
-  Send,
 } from "lucide-react";
-import { useAccount, useConnect, useDisconnect, useSignMessage, useSwitchChain, useWriteContract } from "wagmi";
-import { sepolia } from "wagmi/chains";
-import { parseUnits } from "viem";
-import { USDT_CONTRACT_ADDRESS, USDT_ABI } from "@/lib/wagmi.config";
+import { ethers, BrowserProvider } from "ethers";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
-interface Team {
-  id: string;
-  name: string;
-  description?: string;
-  plan: string;
-  role: string;
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
 }
 
 interface Subscription {
@@ -83,18 +70,10 @@ interface UsageStats {
   remainingReviews: number;
 }
 
-interface PaymentRequest {
-  paymentId: string;
-  salt: string;
-  message: string;
-  amount: number;
-  receiverAddress: string;
-  chainInfo: {
-    chainId: number;
-    name: string;
-    usdtAddress: string;
-  };
-  expiresAt: number;
+interface SupportedChain {
+  chainId: number;
+  name: string;
+  usdcAddress: string;
 }
 
 const PLAN_PRICES = {
@@ -104,88 +83,87 @@ const PLAN_PRICES = {
   enterprise: 299,
 };
 
-interface Team {
-  id: string;
-  name: string;
-  description?: string;
-  plan: string;
-  role: string;
-}
+const USDC_ABI = [
+  "function transfer(address to, uint256 amount) returns (bool)",
+  "function balanceOf(address account) view returns (uint256)",
+  "function decimals() view returns (uint8)",
+];
 
 export default function BillingPage() {
   const router = useRouter();
-  const { address, isConnected, chainId } = useAccount();
-  const { connect, connectors } = useConnect();
-  const { disconnect } = useDisconnect();
-  const { signMessageAsync } = useSignMessage();
-  const { switchChain } = useSwitchChain();
-  const { writeContractAsync } = useWriteContract();
+  const searchParams = useSearchParams();
 
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [usage, setUsage] = useState<UsageStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [paymentRequest, setPaymentRequest] = useState<PaymentRequest | null>(null);
-  const [processingStep, setProcessingStep] = useState<string>("");
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [selectedContext, setSelectedContext] = useState<string>("");
+
+  // Web3 states
+  const [walletAddress, setWalletAddress] = useState<string>("");
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [supportedChains, setSupportedChains] = useState<SupportedChain[]>([]);
+  const [pendingPayment, setPendingPayment] = useState<any>(null);
+  const [processingPayment, setProcessingPayment] = useState(false);
 
   useEffect(() => {
-    // Check for team parameter in URL
-    const params = new URLSearchParams(window.location.search);
-    const teamParam = params.get('team');
-    
-    if (teamParam) {
-      setSelectedContext(teamParam);
+    fetchBillingData();
+    checkWalletConnection();
+
+    const planParam = searchParams.get("plan");
+    if (planParam && planParam.toLowerCase() !== "free") {
+      toast.success(
+        `Ready to upgrade to ${planParam.toUpperCase()} plan! Connect your wallet to pay with USDC.`
+      );
     }
-    
-    loadTeams();
-    fetchBillingData();
-  }, []);
+  }, [searchParams]);
 
-  useEffect(() => {
-    fetchBillingData();
-  }, [selectedContext]);
-
-  const loadTeams = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/teams`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setTeams(data);
-        // Only set default if not already set by URL param
-        if (!selectedContext) {
-          if (data.length > 0) {
-            setSelectedContext(data[0].id);
-          } else {
-            setSelectedContext("personal");
-          }
+  const checkWalletConnection = async () => {
+    if (typeof window.ethereum !== "undefined") {
+      try {
+        const provider = new BrowserProvider(window.ethereum);
+        const accounts = await provider.listAccounts();
+        if (accounts.length > 0) {
+          setWalletAddress(accounts[0].address);
         }
+      } catch (error) {
+        console.error("Wallet check failed:", error);
       }
-    } catch (error) {
-      console.error("Unable to load teams", error);
-      setSelectedContext("personal");
     }
   };
 
-  const fetchBillingData = async () => {
-    // Don't fetch if context not set yet
-    if (!selectedContext) {
+  const connectWallet = async () => {
+    if (typeof window.ethereum === "undefined") {
+      toast.error("MetaMask or another Web3 wallet is required");
       return;
     }
 
+    setIsConnecting(true);
+    try {
+      const provider = new BrowserProvider(window.ethereum);
+      const accounts = await provider.send("eth_requestAccounts", []);
+      setWalletAddress(accounts[0]);
+      toast.success("Wallet connected successfully!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to connect wallet");
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const disconnectWallet = () => {
+    setWalletAddress("");
+    toast.success("Wallet disconnected");
+  };
+
+  const fetchBillingData = async () => {
     try {
       const token = localStorage.getItem("token");
-      const endpoint = selectedContext === "personal"
-        ? `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/me`
-        : `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/team/${selectedContext}`;
-      
-      const subRes = await fetch(endpoint, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const subRes = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/me`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       if (subRes.ok) {
         const subData = await subRes.json();
@@ -210,6 +188,8 @@ export default function BillingPage() {
           if (usageRes.ok) setUsage(await usageRes.json());
           if (paymentsRes.ok) setPayments(await paymentsRes.json());
         }
+      } else if (subRes.status === 404) {
+        setSubscription(null);
       }
     } catch (error) {
       toast.error("Unable to load billing information");
@@ -218,27 +198,17 @@ export default function BillingPage() {
     }
   };
 
-  const handleConnectWallet = () => {
-    const injectedConnector = connectors.find((c) => c.id === "injected");
-    if (injectedConnector) {
-      connect({ connector: injectedConnector });
-    } else {
-      toast.error("No wallet connector found. Please install MetaMask.");
-    }
-  };
-
-  const handleUpgrade = async (plan: string) => {
-    if (!isConnected || !address) {
+  const createPaymentIntent = async (plan: string) => {
+    if (!walletAddress) {
       toast.error("Please connect your wallet first");
       return;
     }
 
     try {
-      setProcessingStep("Creating payment request...");
       const token = localStorage.getItem("token");
       let subId = subscription?.id;
+      let currentSub = subscription;
 
-      // Create or update subscription
       if (subId) {
         const updateRes = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/${subId}`,
@@ -251,14 +221,10 @@ export default function BillingPage() {
             body: JSON.stringify({
               plan: plan.toLowerCase(),
               billingCycle: "monthly",
-              ...(selectedContext !== "personal" && { teamId: selectedContext }),
             }),
           }
         );
-        if (updateRes.ok) {
-          const updatedSub = await updateRes.json();
-          setSubscription(updatedSub);
-        }
+        if (updateRes.ok) currentSub = await updateRes.json();
       } else {
         const createRes = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/subscriptions`,
@@ -271,145 +237,96 @@ export default function BillingPage() {
             body: JSON.stringify({
               plan: plan.toLowerCase(),
               billingCycle: "monthly",
-              ...(selectedContext !== "personal" && { teamId: selectedContext }),
             }),
           }
         );
         if (createRes.ok) {
-          const newSub = await createRes.json();
-          setSubscription(newSub);
-          subId = newSub.id;
+          currentSub = await createRes.json();
+          if (currentSub?.id) {
+            subId = currentSub?.id;
+          }
         }
       }
 
-      // Step 1: Create payment request
+      setSubscription(currentSub);
+
       const amount = PLAN_PRICES[plan as keyof typeof PLAN_PRICES];
-      const paymentReqRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/${subId}/payment/request`,
+      const paymentRes = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/${subId}/payment`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ amount }),
+          body: JSON.stringify({ amount, walletAddress, metadata: { plan } }),
         }
       );
 
-      if (!paymentReqRes.ok) throw new Error("Failed to create payment request");
-
-      const paymentReqData: PaymentRequest = await paymentReqRes.json();
-      setPaymentRequest(paymentReqData);
-
-      // Step 2: Sign message
-      setProcessingStep("Waiting for signature...");
-      const signature = await signMessageAsync({
-        message: paymentReqData.message,
-      });
-
-      setProcessingStep("Submitting signature...");
-      const signatureRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/payment/${paymentReqData.paymentId}/signature`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            signature,
-            walletAddress: address,
-          }),
-        }
+      if (!paymentRes.ok) throw new Error();
+      const paymentData = await paymentRes.json();
+      setPendingPayment(paymentData);
+      setSupportedChains(paymentData.supportedChains);
+      toast.success(
+        `Payment ready! Send ${amount} USDC to activate your plan.`
       );
-
-      if (!signatureRes.ok) throw new Error("Signature verification failed");
-
-      toast.success("Signature verified! Ready to send USDT.");
-      setProcessingStep("");
-    } catch (error: any) {
-      toast.error(error.message || "Payment initiation failed");
-      setProcessingStep("");
-      setPaymentRequest(null);
+    } catch (error) {
+      toast.error("Failed to prepare payment");
     }
   };
 
-  const handleSendUSDT = async () => {
-    if (!paymentRequest || !address) return;
+  const sendUSDCPayment = async (chainId: number) => {
+    if (!pendingPayment || !walletAddress) return;
+    setProcessingPayment(true);
 
     try {
-      setProcessingStep("Switching to Sepolia Testnet...");
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
 
-      // Switch to Sepolia if needed
-      if (chainId !== sepolia.id) {
-        await switchChain({ chainId: sepolia.id });
-      }
-
-      setProcessingStep("Sending USDT...");
-      const amountInWei = parseUnits(paymentRequest.amount.toString(), 6);
-
-      const hash = await writeContractAsync({
-        address: USDT_CONTRACT_ADDRESS,
-        abi: USDT_ABI,
-        functionName: "transfer",
-        args: [paymentRequest.receiverAddress as `0x${string}`, amountInWei],
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: `0x${chainId.toString(16)}` }],
       });
 
-      toast.success("Transaction sent! 🎉");
-      toast.loading("Our system is automatically verifying your payment...");
-      
-      setProcessingStep("Waiting for automatic verification...");
+      const chain = supportedChains.find((c) => c.chainId === chainId);
+      if (!chain) throw new Error("Unsupported chain");
 
-      // Store transaction hash for backend to pick up
+      const usdcContract = new ethers.Contract(
+        chain.usdcAddress,
+        USDC_ABI,
+        signer
+      );
+      const amount = ethers.parseUnits(pendingPayment.amount.toString(), 6);
+      const tx = await usdcContract.transfer(
+        pendingPayment.receiverAddress,
+        amount
+      );
+
+      toast.success("Transaction sent! Confirming...");
+      const receipt = await tx.wait();
+      toast.success("Transaction confirmed! Verifying payment...");
+
       const token = localStorage.getItem("token");
-      
-      // Wait for blockchain confirmation and listener to pick up the event
-      // The backend listener will automatically verify the payment
-      let attempts = 0;
-      const maxAttempts = 30; // Check for 30 seconds
-      
-      const checkInterval = setInterval(async () => {
-        attempts++;
-        
-        // Check if payment has been verified
-        const paymentsRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/${subscription?.id}/payments`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        
-        if (paymentsRes.ok) {
-          const payments = await paymentsRes.json();
-          const currentPayment = payments.find((p: any) => p.id === paymentRequest.paymentId);
-          
-          if (currentPayment?.status === "succeeded") {
-            clearInterval(checkInterval);
-            toast.dismiss();
-            toast.success("Payment verified! Subscription activated 🎉");
-            setPaymentRequest(null);
-            setProcessingStep("");
-            fetchBillingData();
-            return;
-          }
+      const verifyRes = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/payment/${pendingPayment.payment.id}/verify`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ transactionHash: receipt.hash, chainId }),
         }
-        
-        // Stop checking after max attempts
-        if (attempts >= maxAttempts) {
-          clearInterval(checkInterval);
-          toast.dismiss();
-          toast.success(
-            "Payment submitted! Our system will verify it automatically within a few minutes.",
-            { duration: 5000 }
-          );
-          setPaymentRequest(null);
-          setProcessingStep("");
-          fetchBillingData();
-        }
-      }, 1000); // Check every second
+      );
+
+      if (!verifyRes.ok) throw new Error();
+      toast.success("Payment successful! Subscription activated 🎉");
+      setPendingPayment(null);
+      fetchBillingData();
     } catch (error: any) {
       toast.error(error.message || "Payment failed");
-      setProcessingStep("");
+    } finally {
+      setProcessingPayment(false);
     }
   };
 
@@ -439,8 +356,20 @@ export default function BillingPage() {
     }
   };
 
-  const formatAddress = (addr?: string) =>
+  const formatAddress = (addr: string) =>
     addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : "";
+
+  const getBlockExplorerUrl = (chainId: number, hash: string) => {
+    const explorers: Record<number, string> = {
+      1: "https://etherscan.io/tx",
+      11155111: "https://sepolia.etherscan.io/tx",
+      137: "https://polygonscan.com/tx",
+      80001: "https://mumbai.polygonscan.com/tx",
+      42161: "https://arbiscan.io/tx",
+      8453: "https://basescan.org/tx",
+    };
+    return `${explorers[chainId] || "https://etherscan.io/tx"}/${hash}`;
+  };
 
   if (loading) {
     return (
@@ -463,118 +392,80 @@ export default function BillingPage() {
           </div>
           <div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
-              Team Billing
+              Billing & Subscription
             </h1>
             <p className="text-zinc-400 mt-1 sm:mt-1.5 text-sm sm:text-base">
-              Manage team subscriptions and pay securely with USDT
+              Manage your plan and pay securely with USDC
             </p>
           </div>
         </div>
 
         <div className="flex flex-wrap gap-3">
-          {isConnected && address ? (
+          {walletAddress ? (
             <Button
               variant="outline"
-              onClick={() => disconnect()}
+              onClick={disconnectWallet}
               className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
             >
               <Wallet className="h-4 w-4 mr-2" />
-              {formatAddress(address)}
+              {formatAddress(walletAddress)}
             </Button>
           ) : (
             <Button
-              onClick={handleConnectWallet}
+              onClick={connectWallet}
+              disabled={isConnecting}
               className="bg-gradient-to-r from-white to-zinc-400 text-black hover:from-zinc-200 hover:to-zinc-500 shadow-lg"
             >
               <Wallet className="h-5 w-5 mr-2" />
-              Connect Wallet
+              {isConnecting ? "Connecting..." : "Connect Wallet"}
             </Button>
           )}
-          <Link href="/pricing" target="_blank">
-            <Button
-              variant="outline"
-              className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
-            >
-              <TrendingUp className="h-4 w-4 mr-2" />
-              View Plans
-              <ExternalLink className="h-3 w-3 ml-2" />
-            </Button>
-          </Link>
+          <Button
+            variant="outline"
+            onClick={() => router.push("/pricing")}
+            className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+          >
+            <TrendingUp className="h-4 w-4 mr-2" />
+            View Plans
+          </Button>
         </div>
       </div>
 
-      {/* Context Selector (Team Selection) */}
-      <Card className="bg-zinc-900/50 backdrop-blur-sm border-zinc-800">
-        <CardContent className="py-6">
-          <div className="flex items-center gap-4">
-            <Label className="text-zinc-300 font-medium">
-              Select Team:
-            </Label>
-            <Select value={selectedContext} onValueChange={setSelectedContext}>
-              <SelectTrigger className="w-80 bg-zinc-800 border-zinc-700 text-white">
-                <SelectValue placeholder="Select a team" />
-              </SelectTrigger>
-              <SelectContent>
-                {teams.map((team) => (
-                  <SelectItem key={team.id} value={team.id} className="text-slate-800">
-                    {team.name} - {team.plan.toUpperCase()} Plan
-                  </SelectItem>
-                ))}
-                <SelectItem value="personal" className="text-slate-800">💼 Personal Account</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Processing Payment Alert */}
-      {processingStep && (
+      {/* Pending Payment Alert */}
+      {pendingPayment && (
         <Card className="border-2 border-blue-500/50 bg-blue-900/20 backdrop-blur-sm shadow-2xl">
-          <CardContent className="py-6">
-            <div className="flex items-center gap-4">
-              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-              <div>
-                <p className="text-white font-semibold">{processingStep}</p>
-                <p className="text-zinc-400 text-sm">Please wait...</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Payment Request Alert */}
-      {paymentRequest && !processingStep && (
-        <Card className="border-2 border-green-500/50 bg-green-900/20 backdrop-blur-sm shadow-2xl">
           <CardHeader>
-            <CardTitle className="flex items-center gap-3 text-green-400">
-              <Send className="h-6 w-6" />
-              Ready to Send USDT
+            <CardTitle className="flex items-center gap-3 text-blue-400">
+              <Zap className="h-6 w-6" />
+              Complete Your Payment
             </CardTitle>
             <CardDescription className="text-zinc-300">
-              Sign verified! Now send {paymentRequest.amount} USDT to complete your payment
+              Send {pendingPayment.amount} USDC to activate your subscription
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             <div>
               <Label className="text-zinc-400">Receiver Address</Label>
               <code className="block mt-2 p-3 bg-zinc-800/70 rounded-lg border border-zinc-700 text-sm font-mono text-white break-all">
-                {paymentRequest.receiverAddress}
+                {pendingPayment.receiverAddress}
               </code>
             </div>
             <div>
-              <Label className="text-zinc-400">Network</Label>
-              <p className="text-white font-semibold mt-1">
-                {paymentRequest.chainInfo.name}
-              </p>
+              <Label className="text-zinc-400">Choose Network</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
+                {supportedChains.map((chain) => (
+                  <Button
+                    key={chain.chainId}
+                    onClick={() => sendUSDCPayment(chain.chainId)}
+                    disabled={processingPayment}
+                    variant="outline"
+                    className="border-zinc-600 hover:bg-zinc-800 hover:text-white"
+                  >
+                    {chain.name}
+                  </Button>
+                ))}
+              </div>
             </div>
-            <Button
-              onClick={handleSendUSDT}
-              disabled={!!processingStep}
-              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold"
-            >
-              <Send className="h-5 w-5 mr-2" />
-              Send {paymentRequest.amount} USDT
-            </Button>
           </CardContent>
         </Card>
       )}
@@ -588,14 +479,9 @@ export default function BillingPage() {
               <div>
                 <CardTitle className="text-2xl text-white">
                   Current Plan
-                  {selectedContext !== "personal" && teams.length > 0 && (
-                    <span className="text-base font-normal text-zinc-400 ml-3">
-                      ({teams.find(t => t.id === selectedContext)?.name})
-                    </span>
-                  )}
                 </CardTitle>
                 <CardDescription className="text-zinc-400">
-                  {selectedContext === "personal" ? "Personal subscription" : "Team subscription"}
+                  Your subscription details
                 </CardDescription>
               </div>
             </div>
@@ -624,7 +510,7 @@ export default function BillingPage() {
                 <div className="space-y-1">
                   <p className="text-zinc-500 text-sm">Monthly Price</p>
                   <p className="text-3xl font-bold text-white">
-                    ${subscription.price} USDT
+                    ${subscription.price} USDC
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -656,62 +542,19 @@ export default function BillingPage() {
               </div>
 
               <div className="flex flex-wrap gap-3 pt-4">
-                {isConnected && subscription.plan === "free" && (
-                  <>
-                    <Button
-                      onClick={() => handleUpgrade("starter")}
-                      disabled={!!processingStep}
-                      className="bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 shadow-lg font-medium"
-                    >
-                      <ArrowUpRight className="h-5 w-5 mr-2" />
-                      Upgrade to Starter - $29/mo
-                    </Button>
-                    <Button
-                      onClick={() => handleUpgrade("professional")}
-                      disabled={!!processingStep}
-                      className="bg-gradient-to-r from-white to-zinc-400 text-black hover:from-zinc-200 hover:to-zinc-500 shadow-lg font-medium"
-                    >
-                      <ArrowUpRight className="h-5 w-5 mr-2" />
-                      Upgrade to Professional - $99/mo
-                    </Button>
-                    <Button
-                      onClick={() => handleUpgrade("enterprise")}
-                      disabled={!!processingStep}
-                      className="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 shadow-lg font-medium"
-                    >
-                      <ArrowUpRight className="h-5 w-5 mr-2" />
-                      Upgrade to Enterprise - $299/mo
-                    </Button>
-                  </>
-                )}
-                {isConnected && subscription.plan === "starter" && (
-                  <>
-                    <Button
-                      onClick={() => handleUpgrade("professional")}
-                      disabled={!!processingStep}
-                      className="bg-gradient-to-r from-white to-zinc-400 text-black hover:from-zinc-200 hover:to-zinc-500 shadow-lg font-medium"
-                    >
-                      <ArrowUpRight className="h-5 w-5 mr-2" />
-                      Upgrade to Professional - $99/mo
-                    </Button>
-                    <Button
-                      onClick={() => handleUpgrade("enterprise")}
-                      disabled={!!processingStep}
-                      className="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 shadow-lg font-medium"
-                    >
-                      <ArrowUpRight className="h-5 w-5 mr-2" />
-                      Upgrade to Enterprise - $299/mo
-                    </Button>
-                  </>
-                )}
-                {isConnected && subscription.plan === "professional" && (
+                {walletAddress && subscription.plan !== "enterprise" && (
                   <Button
-                    onClick={() => handleUpgrade("enterprise")}
-                    disabled={!!processingStep}
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 shadow-lg font-medium"
+                    onClick={() =>
+                      createPaymentIntent(
+                        subscription.plan === "free"
+                          ? "starter"
+                          : "professional"
+                      )
+                    }
+                    className="bg-gradient-to-r from-white to-zinc-400 text-black hover:from-zinc-200 hover:to-zinc-500 shadow-lg font-medium"
                   >
                     <ArrowUpRight className="h-5 w-5 mr-2" />
-                    Upgrade to Enterprise - $299/mo
+                    Upgrade / Renew with USDC
                   </Button>
                 )}
                 {subscription.status === "active" &&
@@ -734,17 +577,16 @@ export default function BillingPage() {
                 No Active Subscription
               </h3>
               <p className="text-zinc-400 max-w-md mx-auto">
-                You're currently on the Free plan. Upgrade to unlock more features.
+                You're currently on the Free plan. Upgrade to unlock more AI
+                reviews and features.
               </p>
-              <Link href="/pricing" target="_blank">
-                <Button
-                  className="bg-gradient-to-r from-white to-zinc-400 text-black hover:from-zinc-200 hover:to-zinc-500 shadow-lg text-lg px-8 py-6"
-                >
-                  <Zap className="h-6 w-6 mr-3" />
-                  Explore Paid Plans
-                  <ExternalLink className="h-5 w-5 ml-3" />
-                </Button>
-              </Link>
+              <Button
+                onClick={() => router.push("/pricing")}
+                className="bg-gradient-to-r from-white to-zinc-400 text-black hover:from-zinc-200 hover:to-zinc-500 shadow-lg text-lg px-8 py-6"
+              >
+                <Zap className="h-6 w-6 mr-3" />
+                Explore Paid Plans
+              </Button>
             </div>
           )}
         </CardContent>
@@ -778,7 +620,7 @@ export default function BillingPage() {
                   <div className="flex items-center gap-2 mt-4 text-orange-400">
                     <AlertCircle className="h-5 w-5" />
                     <span>
-                      You're using {usage.usagePercentage.toFixed(0)}% of your
+                      You’re using {usage.usagePercentage.toFixed(0)}% of your
                       monthly limit. Consider upgrading!
                     </span>
                   </div>
@@ -796,7 +638,7 @@ export default function BillingPage() {
             Payment History
           </CardTitle>
           <CardDescription className="text-zinc-400">
-            Your USDT transaction records
+            Your USDC transaction records
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -854,19 +696,30 @@ export default function BillingPage() {
                           { year: "numeric", month: "long", day: "numeric" }
                         )}
                       </p>
-                      {payment.transactionHash && (
+                      {payment.transactionHash && payment.chainId && (
                         <a
-                          href={`https://sepolia.etherscan.io/tx/${payment.transactionHash}`}
+                          href={getBlockExplorerUrl(
+                            payment.chainId,
+                            payment.transactionHash
+                          )}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 mt-1"
+                          className="inline-flex items-center gap-1 text-sm text-blue-400 hover:text-blue-300 mt-2"
                         >
-                          View on Explorer
+                          View Transaction
                           <ExternalLink className="h-3 w-3" />
                         </a>
                       )}
                     </div>
                   </div>
+                  {payment.fromAddress && (
+                    <div className="text-right">
+                      <p className="text-sm text-zinc-500">From</p>
+                      <p className="font-mono text-sm text-zinc-300">
+                        {formatAddress(payment.fromAddress)}
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

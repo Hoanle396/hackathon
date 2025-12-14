@@ -6,6 +6,7 @@ import { TeamMember, TeamRole, InvitationStatus } from './team-member.entity';
 import { User } from '../user/user.entity';
 import { CreateTeamDto, UpdateTeamDto, InviteMemberDto } from './dto/team.dto';
 import { randomBytes } from 'crypto';
+import { Subscription, SubscriptionPlan, SubscriptionStatus } from '../subscription/subscription.entity';
 
 @Injectable()
 export class TeamService {
@@ -33,6 +34,62 @@ export class TeamService {
       role: TeamRole.OWNER,
       status: InvitationStatus.ACCEPTED,
     });
+
+    // Find owner's personal subscription to match the plan
+    let ownerSubscription = await this.teamRepository.manager.findOne(Subscription, {
+      where: { userId },
+    });
+
+    // If owner doesn't have a subscription, create FREE for them first
+    if (!ownerSubscription) {
+      const now = new Date();
+      const periodEnd = new Date(now);
+      periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+      ownerSubscription = this.teamRepository.manager.create(Subscription, {
+        userId,
+        plan: SubscriptionPlan.FREE,
+        status: SubscriptionStatus.ACTIVE,
+        price: 0,
+        billingCycle: 'monthly',
+        maxProjects: 3,
+        maxMembers: 5,
+        monthlyReviewLimit: 100,
+        currentMonthReviews: 0,
+        currentPeriodStart: now,
+        currentPeriodEnd: periodEnd,
+      });
+
+      ownerSubscription = await this.teamRepository.manager.save(Subscription, ownerSubscription);
+    }
+
+    // Create team subscription matching the owner's plan
+    const now = new Date();
+    const periodEnd = new Date(now);
+    periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+    const teamSubscription = this.teamRepository.manager.create(Subscription, {
+      teamId: savedTeam.id,
+      plan: ownerSubscription.plan,
+      status: ownerSubscription.status,
+      price: ownerSubscription.price,
+      billingCycle: ownerSubscription.billingCycle,
+      maxProjects: ownerSubscription.maxProjects,
+      maxMembers: ownerSubscription.maxMembers,
+      monthlyReviewLimit: ownerSubscription.monthlyReviewLimit,
+      currentMonthReviews: 0,
+      currentPeriodStart: now,
+      currentPeriodEnd: periodEnd,
+    });
+
+    await this.teamRepository.manager.save(Subscription, teamSubscription);
+
+    // Update team entity with subscription details
+    savedTeam.plan = ownerSubscription.plan as any;
+    savedTeam.maxProjects = ownerSubscription.maxProjects;
+    savedTeam.maxMembers = ownerSubscription.maxMembers;
+    savedTeam.monthlyReviewLimit = ownerSubscription.monthlyReviewLimit;
+    await this.teamRepository.save(savedTeam);
 
     return savedTeam;
   }

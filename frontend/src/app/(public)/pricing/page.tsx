@@ -228,7 +228,7 @@ export default function PricingPage() {
 
                   <Button
                     onClick={() =>
-                      router.push(`/auth/register?plan=${plan.name}`)
+                      router.push("/dashboard/billing")
                     }
                     className={`w-full mt-6 py-2.5 rounded-lg font-semibold transition-all duration-300 ${
                       plan.popular
@@ -258,7 +258,7 @@ export default function PricingPage() {
 
               <Button
                 size="lg"
-                onClick={() => router.push("/auth/register")}
+                onClick={() => router.push("/dashboard/billing")}
                 className="px-8 py-3 text-lg bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-lg"
               >
                 Get Started

@@ -19,13 +19,17 @@ import {
 import { SubscriptionService } from './subscription.service';
 import { CreateSubscriptionDto, UpdateSubscriptionDto } from './dto/subscription.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PaymentListenerService } from './payment-listener.service';
 
 @ApiTags('subscriptions')
 @ApiBearerAuth('JWT-auth')
 @Controller('subscriptions')
 @UseGuards(JwtAuthGuard)
 export class SubscriptionController {
-  constructor(private readonly subscriptionService: SubscriptionService) {}
+  constructor(
+    private readonly subscriptionService: SubscriptionService,
+    private readonly paymentListenerService: PaymentListenerService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a subscription' })
@@ -93,32 +97,60 @@ export class SubscriptionController {
     return this.subscriptionService.resetMonthlyUsage(id);
   }
 
-  @Post(':id/payment')
-  @ApiOperation({ summary: 'Create USDC payment for subscription' })
-  @ApiResponse({ status: 201, description: 'Payment created with receiver address and supported chains' })
-  createPayment(
+  @Post(':id/payment/request')
+  @ApiOperation({ summary: 'Create USDT payment request with salt (Step 1)' })
+  @ApiResponse({ status: 201, description: 'Payment request created with salt and message to sign' })
+  createPaymentRequest(
+    @Request() req,
     @Param('id') id: string,
-    @Body() body: { amount: number; walletAddress: string; metadata?: Record<string, any> },
+    @Body() body: { amount: number },
   ) {
-    return this.subscriptionService.createPayment(
+    return this.subscriptionService.createPaymentRequest(
+      req.user.id,
       id,
       body.amount,
+    );
+  }
+ 
+  @Post('payment/:paymentId/signature')
+  @ApiOperation({ summary: 'Submit payment signature (Step 2)' })
+  @ApiResponse({ status: 200, description: 'Signature verified, ready for USDT transfer' })
+  submitPaymentSignature(
+    @Param('paymentId') paymentId: string,
+    @Body() body: { signature: string; walletAddress: string },
+  ) {
+    return this.subscriptionService.submitPaymentSignature(
+      paymentId,
+      body.signature,
       body.walletAddress,
-      body.metadata,
     );
   }
 
   @Post('payment/:paymentId/verify')
-  @ApiOperation({ summary: 'Verify and confirm blockchain payment' })
+  @ApiOperation({ summary: 'Verify USDT transaction on-chain (Step 3 - Admin)' })
   @ApiResponse({ status: 200, description: 'Payment verified and subscription activated' })
-  verifyPayment(
+  verifyPaymentTransaction(
     @Param('paymentId') paymentId: string,
-    @Body() body: { transactionHash: string; chainId: number },
+    @Body() body: { transactionHash: string },
   ) {
-    return this.subscriptionService.verifyAndConfirmPayment(
+    return this.subscriptionService.verifyPaymentTransaction(
       paymentId,
       body.transactionHash,
-      body.chainId,
     );
+  }
+
+  @Get('payment/listener/status')
+  @ApiOperation({ summary: 'Get payment listener status' })
+  @ApiResponse({ status: 200, description: 'Returns listener status' })
+  getListenerStatus() {
+    return this.paymentListenerService.getStatus();
+  }
+
+  @Post('payment/listener/crawl')
+  @ApiOperation({ summary: 'Manually trigger payment crawl (admin only)' })
+  @ApiResponse({ status: 200, description: 'Crawl triggered' })
+  async triggerCrawl() {
+    await this.paymentListenerService.crawlPendingPayments();
+    return { message: 'Crawl completed' };
   }
 }

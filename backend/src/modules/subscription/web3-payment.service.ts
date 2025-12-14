@@ -1,38 +1,27 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ethers } from 'ethers';
+import { randomBytes } from 'crypto';
 
-// USDC Token ABI (minimal interface for transfers)
-const USDC_ABI = [
+// USDT Token ABI (minimal interface for transfers)
+const USDT_ABI = [
   'function transfer(address to, uint256 amount) returns (bool)',
   'function balanceOf(address account) view returns (uint256)',
   'function decimals() view returns (uint8)',
   'event Transfer(address indexed from, address indexed to, uint256 value)',
 ];
 
-// Supported chains
-export enum SupportedChain {
-  ETHEREUM_MAINNET = 1,
-  ETHEREUM_SEPOLIA = 11155111,
-  POLYGON_MAINNET = 137,
-  POLYGON_MUMBAI = 80001,
-  ARBITRUM_MAINNET = 42161,
-  ARBITRUM_SEPOLIA = 421614,
-  BASE_MAINNET = 8453,
-  BASE_SEPOLIA = 84532,
-}
+// Polygon Testnet USDT Contract Address
+const CHAIN_ID = 11155111;
+const USDT_CONTRACT_ADDRESS = '0x741A2E7604D850Af2bDf20B27616BA33Fad71E75'; // TODO: Replace with actual USDT contract on Amoy
 
-// USDC contract addresses per chain
-const USDC_ADDRESSES: Record<number, string> = {
-  [SupportedChain.ETHEREUM_MAINNET]: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-  [SupportedChain.ETHEREUM_SEPOLIA]: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238',
-  [SupportedChain.POLYGON_MAINNET]: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
-  [SupportedChain.POLYGON_MUMBAI]: '0x9999f7Fea5938fD3b1E26A12c3f2fb024e194f97',
-  [SupportedChain.ARBITRUM_MAINNET]: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
-  [SupportedChain.ARBITRUM_SEPOLIA]: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d',
-  [SupportedChain.BASE_MAINNET]: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-  [SupportedChain.BASE_SEPOLIA]: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
-};
+export interface PaymentRequest {
+  salt: string;
+  amount: number;
+  userId: string;
+  subscriptionId: string;
+  expiresAt: number;
+}
 
 export interface PaymentVerification {
   isValid: boolean;
@@ -41,65 +30,114 @@ export interface PaymentVerification {
   to: string;
   amount: string;
   amountUSD: number;
-  chainId: number;
   blockNumber: number;
   timestamp: number;
+  userId: string;
 }
 
 @Injectable()
 export class Web3PaymentService {
   private readonly logger = new Logger(Web3PaymentService.name);
-  private providers: Map<number, ethers.Provider> = new Map();
+  private provider: ethers.Provider;
   private receiverAddress: string;
+  private pendingPayments: Map<string, PaymentRequest> = new Map();
 
   constructor(private configService: ConfigService) {
     this.receiverAddress = this.configService.get<string>('WEB3_RECEIVER_ADDRESS');
-    this.initializeProviders();
+    const rpcUrl = this.configService.get<string>('RPC_URL') || 'https://rpc-amoy.polygon.technology';
+    
+    this.provider = new ethers.JsonRpcProvider(rpcUrl);
+    
+    this.logger.log(`Initialized Web3 Payment Service for Amoy Testnet`);
+    this.logger.log(`Receiver Address: ${this.receiverAddress}`);
   }
 
-  private initializeProviders() {
-    const rpcUrls = {
-      [SupportedChain.ETHEREUM_MAINNET]: this.configService.get<string>('ETHEREUM_RPC_URL'),
-      [SupportedChain.ETHEREUM_SEPOLIA]: this.configService.get<string>('ETHEREUM_SEPOLIA_RPC_URL'),
-      [SupportedChain.POLYGON_MAINNET]: this.configService.get<string>('POLYGON_RPC_URL'),
-      [SupportedChain.POLYGON_MUMBAI]: this.configService.get<string>('POLYGON_MUMBAI_RPC_URL'),
-      [SupportedChain.ARBITRUM_MAINNET]: this.configService.get<string>('ARBITRUM_RPC_URL'),
-      [SupportedChain.ARBITRUM_SEPOLIA]: this.configService.get<string>('ARBITRUM_SEPOLIA_RPC_URL'),
-      [SupportedChain.BASE_MAINNET]: this.configService.get<string>('BASE_RPC_URL'),
-      [SupportedChain.BASE_SEPOLIA]: this.configService.get<string>('BASE_SEPOLIA_RPC_URL'),
+  /**
+   * Generate payment request with salt
+   */
+  generatePaymentRequest(
+    userId: string,
+    subscriptionId: string,
+    amount: number,
+  ): PaymentRequest {
+    const salt = randomBytes(32).toString('hex');
+    const expiresAt = Date.now() + 30 * 60 * 1000; // 30 minutes
+
+    const paymentRequest: PaymentRequest = {
+      salt,
+      amount,
+      userId,
+      subscriptionId,
+      expiresAt,
     };
 
-    for (const [chainId, rpcUrl] of Object.entries(rpcUrls)) {
-      if (rpcUrl) {
-        try {
-          this.providers.set(Number(chainId), new ethers.JsonRpcProvider(rpcUrl));
-          this.logger.log(`Initialized provider for chain ${chainId}`);
-        } catch (error) {
-          this.logger.error(`Failed to initialize provider for chain ${chainId}:`, error);
-        }
+    this.pendingPayments.set(salt, paymentRequest);
+
+    // Auto cleanup after expiration
+    setTimeout(() => {
+      this.pendingPayments.delete(salt);
+    }, 30 * 60 * 1000);
+
+    return paymentRequest;
+  }
+
+  /**
+   * Generate message for user to sign
+   */
+  generateSignatureMessage(paymentRequest: PaymentRequest): string {
+    return `Payment Request\nAmount: ${paymentRequest.amount} USDT\nSalt: ${paymentRequest.salt}\nUser ID: ${paymentRequest.userId}\nSubscription ID: ${paymentRequest.subscriptionId}`;
+  }
+
+  /**
+   * Verify signature from user
+   */
+  async verifySignature(
+    salt: string,
+    signature: string,
+    userAddress: string,
+  ): Promise<boolean> {
+    const paymentRequest = this.pendingPayments.get(salt);
+
+    if (!paymentRequest) {
+      throw new BadRequestException('Invalid or expired payment request');
+    }
+
+    if (Date.now() > paymentRequest.expiresAt) {
+      this.pendingPayments.delete(salt);
+      throw new BadRequestException('Payment request expired');
+    }
+
+    try {
+      const message = this.generateSignatureMessage(paymentRequest);
+      const recoveredAddress = ethers.verifyMessage(message, signature);
+
+      if (recoveredAddress.toLowerCase() !== userAddress.toLowerCase()) {
+        throw new BadRequestException('Invalid signature');
       }
+
+      return true;
+    } catch (error) {
+      this.logger.error('Signature verification failed:', error);
+      throw new BadRequestException('Signature verification failed');
     }
   }
 
-  async verifyPayment(
+  /**
+   * Admin crawl and verify transaction on-chain
+   */
+  async verifyPaymentTransaction(
     transactionHash: string,
-    expectedAmount: number,
-    chainId: number,
+    salt: string,
   ): Promise<PaymentVerification> {
-    const provider = this.providers.get(chainId);
-    
-    if (!provider) {
-      throw new BadRequestException(`Unsupported chain ID: ${chainId}`);
-    }
+    const paymentRequest = this.pendingPayments.get(salt);
 
-    const usdcAddress = USDC_ADDRESSES[chainId];
-    if (!usdcAddress) {
-      throw new BadRequestException(`USDC not supported on chain ${chainId}`);
+    if (!paymentRequest) {
+      throw new BadRequestException('Invalid or expired payment request');
     }
 
     try {
       // Get transaction receipt
-      const receipt = await provider.getTransactionReceipt(transactionHash);
+      const receipt = await this.provider.getTransactionReceipt(transactionHash);
       
       if (!receipt) {
         throw new BadRequestException('Transaction not found or not yet confirmed');
@@ -109,21 +147,14 @@ export class Web3PaymentService {
         throw new BadRequestException('Transaction failed');
       }
 
-      // Get transaction details
-      const transaction = await provider.getTransaction(transactionHash);
-      
-      if (!transaction) {
-        throw new BadRequestException('Transaction details not found');
-      }
-
-      // Parse USDC transfer event from logs
-      const usdcInterface = new ethers.Interface(USDC_ABI);
+      // Parse USDT transfer event from logs
+      const usdtInterface = new ethers.Interface(USDT_ABI);
       let transferLog = null;
       
       for (const log of receipt.logs) {
-        if (log.address.toLowerCase() === usdcAddress.toLowerCase()) {
+        if (log.address.toLowerCase() === USDT_CONTRACT_ADDRESS.toLowerCase()) {
           try {
-            const parsed = usdcInterface.parseLog({
+            const parsed = usdtInterface.parseLog({
               topics: [...log.topics],
               data: log.data,
             });
@@ -135,11 +166,12 @@ export class Web3PaymentService {
           } catch (e) {
             // Not a Transfer event, continue
           }
+
         }
       }
 
       if (!transferLog) {
-        throw new BadRequestException('No USDC transfer found in transaction');
+        throw new BadRequestException('No USDT transfer found in transaction');
       }
 
       const from = transferLog.args.from.toLowerCase();
@@ -151,19 +183,22 @@ export class Web3PaymentService {
         throw new BadRequestException('Payment sent to wrong address');
       }
 
-      // Convert amount from USDC decimals (6) to USD
+      // Convert amount from USDT decimals (6) to USD
       const amountUSD = Number(ethers.formatUnits(amount, 6));
 
-      // Verify amount (allow 1% tolerance for gas/slippage)
-      const tolerance = expectedAmount * 0.01;
-      if (Math.abs(amountUSD - expectedAmount) > tolerance) {
+      // Verify amount (allow 1% tolerance)
+      const tolerance = paymentRequest.amount * 0.01;
+      if (Math.abs(amountUSD - paymentRequest.amount) > tolerance) {
         throw new BadRequestException(
-          `Amount mismatch. Expected: ${expectedAmount} USDC, Received: ${amountUSD} USDC`,
+          `Amount mismatch. Expected: ${paymentRequest.amount} USDT, Received: ${amountUSD} USDT`,
         );
       }
 
       // Get block timestamp
-      const block = await provider.getBlock(receipt.blockNumber);
+      const block = await this.provider.getBlock(receipt.blockNumber);
+
+      // Remove from pending after successful verification
+      this.pendingPayments.delete(salt);
       
       return {
         isValid: true,
@@ -172,9 +207,9 @@ export class Web3PaymentService {
         to,
         amount: amount.toString(),
         amountUSD,
-        chainId,
         blockNumber: receipt.blockNumber,
         timestamp: block?.timestamp || 0,
+        userId: paymentRequest.userId,
       };
     } catch (error) {
       this.logger.error('Payment verification failed:', error);
@@ -187,25 +222,17 @@ export class Web3PaymentService {
     }
   }
 
-  async getUSDCBalance(address: string, chainId: number): Promise<string> {
-    const provider = this.providers.get(chainId);
-    
-    if (!provider) {
-      throw new BadRequestException(`Unsupported chain ID: ${chainId}`);
-    }
-
-    const usdcAddress = USDC_ADDRESSES[chainId];
-    if (!usdcAddress) {
-      throw new BadRequestException(`USDC not supported on chain ${chainId}`);
-    }
-
+  /**
+   * Get USDT balance of an address
+   */
+  async getUSDTBalance(address: string): Promise<string> {
     try {
-      const usdcContract = new ethers.Contract(usdcAddress, USDC_ABI, provider);
-      const balance = await usdcContract.balanceOf(address);
+      const usdtContract = new ethers.Contract(USDT_CONTRACT_ADDRESS, USDT_ABI, this.provider);
+      const balance = await usdtContract.balanceOf(address);
       return ethers.formatUnits(balance, 6);
     } catch (error) {
-      this.logger.error('Failed to get USDC balance:', error);
-      throw new BadRequestException('Failed to get USDC balance');
+      this.logger.error('Failed to get USDT balance:', error);
+      throw new BadRequestException('Failed to get USDT balance');
     }
   }
 
@@ -213,29 +240,20 @@ export class Web3PaymentService {
     return this.receiverAddress;
   }
 
-  getSupportedChains(): Array<{ chainId: number; name: string; usdcAddress: string }> {
-    return Object.entries(USDC_ADDRESSES).map(([chainId, usdcAddress]) => ({
-      chainId: Number(chainId),
-      name: this.getChainName(Number(chainId)),
-      usdcAddress,
-    }));
-  }
-
-  private getChainName(chainId: number): string {
-    const names: Record<number, string> = {
-      [SupportedChain.ETHEREUM_MAINNET]: 'Ethereum',
-      [SupportedChain.ETHEREUM_SEPOLIA]: 'Ethereum Sepolia',
-      [SupportedChain.POLYGON_MAINNET]: 'Polygon',
-      [SupportedChain.POLYGON_MUMBAI]: 'Polygon Mumbai',
-      [SupportedChain.ARBITRUM_MAINNET]: 'Arbitrum',
-      [SupportedChain.ARBITRUM_SEPOLIA]: 'Arbitrum Sepolia',
-      [SupportedChain.BASE_MAINNET]: 'Base',
-      [SupportedChain.BASE_SEPOLIA]: 'Base Sepolia',
-    };
-    return names[chainId] || `Chain ${chainId}`;
-  }
-
   isValidAddress(address: string): boolean {
     return ethers.isAddress(address);
+  }
+
+  getChainInfo() {
+    return {
+      chainId: CHAIN_ID,
+      name: 'Polygon Testnet',
+      usdtAddress: USDT_CONTRACT_ADDRESS,
+      rpcUrl: this.configService.get<string>('RPC_URL') || 'https://rpc-amoy.polygon.technology',
+    };
+  }
+
+  getPaymentRequest(salt: string): PaymentRequest | undefined {
+    return this.pendingPayments.get(salt);
   }
 }

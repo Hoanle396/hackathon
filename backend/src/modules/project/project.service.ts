@@ -2,11 +2,13 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Project } from './project.entity';
 import { TeamMember, InvitationStatus } from '../team/team-member.entity';
+import { Subscription } from '../subscription/subscription.entity';
 import { CreateProjectDto, UpdateProjectDto } from './dto/project.dto';
 
 @Injectable()
@@ -16,6 +18,8 @@ export class ProjectService {
     private projectRepository: Repository<Project>,
     @InjectRepository(TeamMember)
     private teamMemberRepository: Repository<TeamMember>,
+    @InjectRepository(Subscription)
+    private subscriptionRepository: Repository<Subscription>,
   ) {}
 
   async create(userId: string, createProjectDto: CreateProjectDto) {
@@ -30,6 +34,24 @@ export class ProjectService {
 
     if (!membership) {
       throw new ForbiddenException('You are not a member of this team');
+    }
+
+    // Check subscription project limit
+    const subscription = await this.subscriptionRepository.findOne({
+      where: { teamId: createProjectDto.teamId },
+    });
+
+    if (subscription && subscription.maxProjects !== -1) {
+      // Count existing projects for this team
+      const projectCount = await this.projectRepository.count({
+        where: { teamId: createProjectDto.teamId },
+      });
+
+      if (projectCount >= subscription.maxProjects) {
+        throw new BadRequestException(
+          `Project limit reached (${subscription.maxProjects}). Please upgrade your subscription plan.`
+        );
+      }
     }
 
     const project = this.projectRepository.create({

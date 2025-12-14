@@ -25,6 +25,10 @@ export class UpdateSubscriptionDto {
   @ApiProperty({ required: false })
   @IsOptional()
   billingCycle?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  teamId?: string;
 }
 
 export class SubscriptionUsageDto {
