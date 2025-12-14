@@ -663,7 +663,26 @@ export class WebhookService {
 
         if (subscription) {
           await this.subscriptionService.incrementUsage(subscription.id, 1);
-          this.logger.log(`📊 Incremented usage for subscription ${subscription.id}: ${subscription.currentMonthReviews + 1}/${subscription.monthlyReviewLimit}`);
+          const newCount = subscription.currentMonthReviews + 1;
+          this.logger.log(`📊 Incremented usage for subscription ${subscription.id}: ${newCount}/${subscription.monthlyReviewLimit}`);
+          
+          // Check if approaching limit (80% or more)
+          const usage = await this.subscriptionService.getUsage(subscription.id);
+          if (usage.usagePercentage >= 80 && usage.usagePercentage < 100) {
+            const warningMessage = `### ⚠️ Approaching Review Limit\n\n` +
+              `You've used **${usage.usagePercentage}%** of your monthly AI review quota.\n\n` +
+              `📊 **Usage:** ${usage.currentMonthReviews} / ${usage.monthlyReviewLimit} reviews\n` +
+              `📉 **Remaining:** ${usage.remainingReviews} reviews\n\n` +
+              `💡 Consider upgrading your plan to avoid interruptions.\n\n` +
+              `[View Billing →](${process.env.FRONTEND_URL || 'https://yourapp.com'}/dashboard/billing)`;
+            
+            // Send warning to Discord only (not to PR to avoid spam)
+            const botToken = project.user?.discordBotToken;
+            if (this.discordService.isEnabled(botToken) && project.discordChannelId && botToken) {
+              await this.discordService.sendMessage(warningMessage, botToken, project.discordChannelId)
+                .catch(err => this.logger.error('Failed to send usage warning to Discord:', err));
+            }
+          }
         } else {
           this.logger.warn(`⚠️ No subscription found for project ${project.id}`);
         }
