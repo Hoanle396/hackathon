@@ -242,8 +242,8 @@ export default function LandingPage() {
 /* COMPONENTS */
 
 const AboutCard = ({ icon, title, desc }: any) => (
-  <CometCard>
-    <div className="p-6 sm:p-8 bg-zinc-900 border border-zinc-800 rounded-xl text-center">
+  <CometCard className="h-full">
+    <div className="p-6 h-full sm:p-8 bg-zinc-900 border border-zinc-800 rounded-xl text-center">
       <div className="flex justify-center mb-4">{icon}</div>
       <h3 className="text-lg sm:text-xl font-semibold text-white">{title}</h3>
       <p className="mt-2 text-zinc-400 text-sm sm:text-base">{desc}</p>
@@ -252,8 +252,8 @@ const AboutCard = ({ icon, title, desc }: any) => (
 );
 
 const FeatureItem = ({ title, desc }: any) => (
-  <CometCard>
-    <div className="p-6 sm:p-8 bg-zinc-900/40 border border-zinc-800 rounded-xl">
+  <CometCard className="h-full">
+    <div className="p-6 h-full sm:p-8 bg-zinc-900/40 border border-zinc-800 rounded-xl">
       <h3 className="text-xl font-semibold text-white mb-2">{title}</h3>
       <p className="text-zinc-400">{desc}</p>
     </div>
