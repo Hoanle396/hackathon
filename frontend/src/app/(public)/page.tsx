@@ -57,6 +57,67 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
+      {/* VIDEO INTRO SECTION */}
+      <section className="relative py-32 px-6 overflow-hidden">
+        {/* Background glow */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute left-1/2 top-1/2 w-[700px] h-[700px] -translate-x-1/2 -translate-y-1/2 bg-indigo-500/15 blur-[140px]" />
+        </div>
+
+        <div className="relative max-w-6xl mx-auto text-center">
+          <motion.h2
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-4xl md:text-5xl font-bold text-white"
+          >
+            See AI Code Review
+            <br />
+            <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+              in Action
+            </span>
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            className="mt-6 text-lg text-zinc-400 max-w-2xl mx-auto"
+          >
+            Watch how AI automatically reviews your pull requests, detects
+            issues, and suggests improvements in seconds.
+          </motion.p>
+
+          {/* Video container */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="relative mt-16 max-w-5xl mx-auto"
+          >
+            {/* Gradient border */}
+            <div className="relative p-[1.5px] rounded-2xl bg-gradient-to-r from-indigo-500/60 via-purple-500/60 to-pink-500/60">
+              <div className="relative rounded-2xl bg-black overflow-hidden shadow-2xl aspect-video">
+                {/* VIDEO PLACEHOLDER */}
+                <video
+                  src="intro.mp4"
+                  controls
+                  className="w-full h-full object-cover"
+                  loop={true}
+                  autoPlay={true}
+                />
+              </div>
+            </div>
+
+            {/* Outer glow */}
+            <div className="absolute -inset-6 bg-indigo-500/20 blur-3xl rounded-3xl -z-10" />
+          </motion.div>
+        </div>
+      </section>
+
       {/* ABOUT SECTION */}
       <section className="py-28 px-6 bg-gradient-to-b from-black to-zinc-950">
         <div className="max-w-5xl mx-auto text-center">
