@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@bprogress/next/app";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Users, Settings, Crown } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import DashboardHeader from "@/components/layout/dashboard-header";
 
 interface Team {
   id: string;
@@ -84,29 +85,21 @@ export default function TeamsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 md:space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6 pb-4 sm:pb-6 border-b border-zinc-800/50">
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-900/50 flex items-center justify-center flex-shrink-0">
-            <Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-          </div>
-          <div className="space-y-1">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
-              Teams
-            </h1>
-            <p className="text-zinc-400 text-sm sm:text-base">
-              Manage your teams and collaborate with members
-            </p>
-          </div>
-        </div>
-        <Button
-          onClick={() => router.push("/dashboard/teams/new")}
-          size="lg"
-          className="bg-white text-black hover:bg-zinc-200 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold group w-full sm:w-auto"
-        >
-          <Plus className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
-          Create Team
-        </Button>
-      </div>
+      <DashboardHeader
+        icon={<Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />}
+        title="Teams"
+        description="Manage your teams and collaborate with members"
+        rightAction={
+          <Button
+            onClick={() => router.push("/dashboard/teams/new")}
+            size="default"
+            className="bg-white text-black hover:bg-zinc-200 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold group w-full sm:w-auto"
+          >
+            <Plus className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
+            Create Team
+          </Button>
+        }
+      />
 
       {/* Loading State */}
       {loading ? (
@@ -118,9 +111,7 @@ export default function TeamsPage() {
             <p className="text-zinc-300 text-lg font-semibold">
               Loading teams...
             </p>
-            <p className="text-zinc-500 text-sm">
-              Please wait a moment
-            </p>
+            <p className="text-zinc-500 text-sm">Please wait a moment</p>
           </div>
         </div>
       ) : teams.length === 0 ? (
@@ -131,9 +122,7 @@ export default function TeamsPage() {
               <Users className="h-14 w-14 text-zinc-400" />
             </div>
             <div className="text-center space-y-4 max-w-md">
-              <h3 className="text-4xl font-bold text-white">
-                No teams yet
-              </h3>
+              <h3 className="text-4xl font-bold text-white">No teams yet</h3>
               <p className="text-zinc-400 text-base leading-relaxed">
                 Create a team to invite members and manage projects together
               </p>
@@ -182,9 +171,9 @@ export default function TeamsPage() {
                 </div>
               </CardHeader>
 
-              <CardContent className="space-y-5">
+              <CardContent className="space-y-4">
                 {/* Plan & Role Badges */}
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2">
                   <Badge
                     variant={getPlanVariant(team.plan)}
                     className={cn(
@@ -212,9 +201,11 @@ export default function TeamsPage() {
                 </div>
 
                 {/* Details */}
-                <div className="space-y-3 p-4 rounded-lg bg-zinc-800/20 border border-zinc-800">
+                <div className="space-y-2 p-4 rounded-lg bg-zinc-800/20 border border-zinc-800">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-zinc-400">Projects Limit</span>
+                    <span className="text-sm text-zinc-400">
+                      Projects Limit
+                    </span>
                     <span className="font-semibold text-white">
                       {team.maxProjects === -1 ? "Unlimited" : team.maxProjects}
                     </span>

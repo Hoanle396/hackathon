@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@bprogress/next/app";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
 import {
@@ -28,7 +28,14 @@ import {
   Zap,
   Send,
 } from "lucide-react";
-import { useAccount, useConnect, useDisconnect, useSignMessage, useSwitchChain, useWriteContract } from "wagmi";
+import {
+  useAccount,
+  useConnect,
+  useDisconnect,
+  useSignMessage,
+  useSwitchChain,
+  useWriteContract,
+} from "wagmi";
 import { sepolia } from "wagmi/chains";
 import { parseUnits } from "viem";
 import { USDT_CONTRACT_ADDRESS, USDT_ABI } from "@/lib/wagmi.config";
@@ -41,6 +48,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import DashboardHeader from "@/components/layout/dashboard-header";
 
 interface Team {
   id: string;
@@ -125,7 +133,9 @@ export default function BillingPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [usage, setUsage] = useState<UsageStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [paymentRequest, setPaymentRequest] = useState<PaymentRequest | null>(null);
+  const [paymentRequest, setPaymentRequest] = useState<PaymentRequest | null>(
+    null
+  );
   const [processingStep, setProcessingStep] = useState<string>("");
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedContext, setSelectedContext] = useState<string>("");
@@ -133,12 +143,12 @@ export default function BillingPage() {
   useEffect(() => {
     // Check for team parameter in URL
     const params = new URLSearchParams(window.location.search);
-    const teamParam = params.get('team');
-    
+    const teamParam = params.get("team");
+
     if (teamParam) {
       setSelectedContext(teamParam);
     }
-    
+
     loadTeams();
     fetchBillingData();
   }, []);
@@ -179,10 +189,11 @@ export default function BillingPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const endpoint = selectedContext === "personal"
-        ? `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/me`
-        : `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/team/${selectedContext}`;
-      
+      const endpoint =
+        selectedContext === "personal"
+          ? `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/me`
+          : `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/team/${selectedContext}`;
+
       const subRes = await fetch(endpoint, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -251,7 +262,9 @@ export default function BillingPage() {
             body: JSON.stringify({
               plan: plan.toLowerCase(),
               billingCycle: "monthly",
-              ...(selectedContext !== "personal" && { teamId: selectedContext }),
+              ...(selectedContext !== "personal" && {
+                teamId: selectedContext,
+              }),
             }),
           }
         );
@@ -271,7 +284,9 @@ export default function BillingPage() {
             body: JSON.stringify({
               plan: plan.toLowerCase(),
               billingCycle: "monthly",
-              ...(selectedContext !== "personal" && { teamId: selectedContext }),
+              ...(selectedContext !== "personal" && {
+                teamId: selectedContext,
+              }),
             }),
           }
         );
@@ -296,7 +311,8 @@ export default function BillingPage() {
         }
       );
 
-      if (!paymentReqRes.ok) throw new Error("Failed to create payment request");
+      if (!paymentReqRes.ok)
+        throw new Error("Failed to create payment request");
 
       const paymentReqData: PaymentRequest = await paymentReqRes.json();
       setPaymentRequest(paymentReqData);
@@ -357,20 +373,20 @@ export default function BillingPage() {
 
       toast.success("Transaction sent! 🎉");
       toast.loading("Our system is automatically verifying your payment...");
-      
+
       setProcessingStep("Waiting for automatic verification...");
 
       // Store transaction hash for backend to pick up
       const token = localStorage.getItem("token");
-      
+
       // Wait for blockchain confirmation and listener to pick up the event
       // The backend listener will automatically verify the payment
       let attempts = 0;
       const maxAttempts = 30; // Check for 30 seconds
-      
+
       const checkInterval = setInterval(async () => {
         attempts++;
-        
+
         // Check if payment has been verified
         const paymentsRes = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/subscriptions/${subscription?.id}/payments`,
@@ -378,11 +394,13 @@ export default function BillingPage() {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        
+
         if (paymentsRes.ok) {
           const payments = await paymentsRes.json();
-          const currentPayment = payments.find((p: any) => p.id === paymentRequest.paymentId);
-          
+          const currentPayment = payments.find(
+            (p: any) => p.id === paymentRequest.paymentId
+          );
+
           if (currentPayment?.status === "succeeded") {
             clearInterval(checkInterval);
             toast.dismiss();
@@ -393,7 +411,7 @@ export default function BillingPage() {
             return;
           }
         }
-        
+
         // Stop checking after max attempts
         if (attempts >= maxAttempts) {
           clearInterval(checkInterval);
@@ -456,71 +474,52 @@ export default function BillingPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 md:space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6 pb-4 sm:pb-6 border-b border-zinc-800/50">
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-900/50 flex items-center justify-center">
-            <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
-              Team Billing
-            </h1>
-            <p className="text-zinc-400 mt-1 sm:mt-1.5 text-sm sm:text-base">
-              Manage team subscriptions and pay securely with USDT
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-3">
-          {isConnected && address ? (
+      <DashboardHeader
+        icon={<DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-white" />}
+        title="Team Billing"
+        description="Manage team subscriptions and pay securely with USDT"
+        rightAction={
+          isConnected && address ? (
             <Button
               variant="outline"
+              className="border-zinc-700 hover:bg-zinc-800/50 hover:border-zinc-600 text-white"
               onClick={() => disconnect()}
-              className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
             >
-              <Wallet className="h-4 w-4 mr-2" />
-              {formatAddress(address)}
+              {`${address.slice(0, 6)}...${address.slice(-4)}`}
             </Button>
           ) : (
             <Button
               onClick={handleConnectWallet}
-              className="bg-gradient-to-r from-white to-zinc-400 text-black hover:from-zinc-200 hover:to-zinc-500 shadow-lg"
+              className="bg-white text-black hover:bg-zinc-200 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
             >
-              <Wallet className="h-5 w-5 mr-2" />
               Connect Wallet
             </Button>
-          )}
-          <Link href="/pricing" target="_blank">
-            <Button
-              variant="outline"
-              className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
-            >
-              <TrendingUp className="h-4 w-4 mr-2" />
-              View Plans
-              <ExternalLink className="h-3 w-3 ml-2" />
-            </Button>
-          </Link>
-        </div>
-      </div>
+          )
+        }
+      />
 
       {/* Context Selector (Team Selection) */}
       <Card className="bg-zinc-900/50 backdrop-blur-sm border-zinc-800">
         <CardContent className="py-6">
           <div className="flex items-center gap-4">
-            <Label className="text-zinc-300 font-medium">
-              Select Team:
-            </Label>
+            <Label className="text-zinc-300 font-medium">Select Team:</Label>
             <Select value={selectedContext} onValueChange={setSelectedContext}>
               <SelectTrigger className="w-80 bg-zinc-800 border-zinc-700 text-white">
                 <SelectValue placeholder="Select a team" />
               </SelectTrigger>
               <SelectContent>
                 {teams.map((team) => (
-                  <SelectItem key={team.id} value={team.id} className="text-slate-800">
+                  <SelectItem
+                    key={team.id}
+                    value={team.id}
+                    className="text-slate-800"
+                  >
                     {team.name} - {team.plan.toUpperCase()} Plan
                   </SelectItem>
                 ))}
-                <SelectItem value="personal" className="text-slate-800">💼 Personal Account</SelectItem>
+                <SelectItem value="personal" className="text-slate-800">
+                  💼 Personal Account
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -551,7 +550,8 @@ export default function BillingPage() {
               Ready to Send USDT
             </CardTitle>
             <CardDescription className="text-zinc-300">
-              Sign verified! Now send {paymentRequest.amount} USDT to complete your payment
+              Sign verified! Now send {paymentRequest.amount} USDT to complete
+              your payment
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -590,12 +590,14 @@ export default function BillingPage() {
                   Current Plan
                   {selectedContext !== "personal" && teams.length > 0 && (
                     <span className="text-base font-normal text-zinc-400 ml-3">
-                      ({teams.find(t => t.id === selectedContext)?.name})
+                      ({teams.find((t) => t.id === selectedContext)?.name})
                     </span>
                   )}
                 </CardTitle>
                 <CardDescription className="text-zinc-400">
-                  {selectedContext === "personal" ? "Personal subscription" : "Team subscription"}
+                  {selectedContext === "personal"
+                    ? "Personal subscription"
+                    : "Team subscription"}
                 </CardDescription>
               </div>
             </div>
@@ -734,12 +736,11 @@ export default function BillingPage() {
                 No Active Subscription
               </h3>
               <p className="text-zinc-400 max-w-md mx-auto">
-                You're currently on the Free plan. Upgrade to unlock more features.
+                You're currently on the Free plan. Upgrade to unlock more
+                features.
               </p>
               <Link href="/pricing" target="_blank">
-                <Button
-                  className="bg-gradient-to-r from-white to-zinc-400 text-black hover:from-zinc-200 hover:to-zinc-500 shadow-lg text-lg px-8 py-6"
-                >
+                <Button className="bg-gradient-to-r from-white to-zinc-400 text-black hover:from-zinc-200 hover:to-zinc-500 shadow-lg text-lg px-8 py-6">
                   <Zap className="h-6 w-6 mr-3" />
                   Explore Paid Plans
                   <ExternalLink className="h-5 w-5 ml-3" />
@@ -819,8 +820,8 @@ export default function BillingPage() {
                         payment.status === "succeeded"
                           ? "bg-emerald-500/20"
                           : payment.status === "failed"
-                            ? "bg-red-500/20"
-                            : "bg-zinc-700"
+                          ? "bg-red-500/20"
+                          : "bg-zinc-700"
                       )}
                     >
                       {payment.status === "succeeded" ? (
@@ -841,8 +842,8 @@ export default function BillingPage() {
                             payment.status === "succeeded"
                               ? "default"
                               : payment.status === "failed"
-                                ? "destructive"
-                                : "secondary"
+                              ? "destructive"
+                              : "secondary"
                           }
                         >
                           {payment.status.toUpperCase()}

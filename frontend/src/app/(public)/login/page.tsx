@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
@@ -18,6 +17,7 @@ import {
 import { authService } from "@/services/auth.service";
 import { useAuthStore } from "@/store/auth";
 import { BackgroundLines } from "@/components/ui/background-lines";
+import { useRouter } from "@bprogress/next/app";
 
 interface LoginForm {
   email: string;

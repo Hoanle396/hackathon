@@ -306,11 +306,13 @@ export default function TeamDetailPage() {
             <Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
+            <h1 className="text-xl md:text-3xl font-bold text-white">
               {team.name}
             </h1>
             {team.description && (
-              <p className="text-zinc-400 mt-1 sm:mt-1.5 text-sm sm:text-base">{team.description}</p>
+              <p className="text-zinc-400 mt-1 sm:mt-1.5 text-sm sm:text-base">
+                {team.description}
+              </p>
             )}
           </div>
         </div>
@@ -320,9 +322,9 @@ export default function TeamDetailPage() {
             className={cn(
               "text-lg px-4 py-2 font-semibold capitalize",
               team.plan === "ENTERPRISE" &&
-              "bg-red-500/20 text-red-400 border-red-500/50",
+                "bg-red-500/20 text-red-400 border-red-500/50",
               team.plan === "PROFESSIONAL" &&
-              "bg-emerald-500/20 text-emerald-400 border-emerald-500/50"
+                "bg-emerald-500/20 text-emerald-400 border-emerald-500/50"
             )}
           >
             {team.plan.toLowerCase()}
@@ -353,12 +355,10 @@ export default function TeamDetailPage() {
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-zinc-400 text-sm">
-                  Current Plan
-                </CardTitle>
+                <CardTitle className="text-zinc-400">Current Plan</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold text-white capitalize">
@@ -369,9 +369,7 @@ export default function TeamDetailPage() {
 
             <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-zinc-400 text-sm">
-                  Project Limit
-                </CardTitle>
+                <CardTitle className="text-zinc-400">Project Limit</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold text-white">
@@ -382,9 +380,7 @@ export default function TeamDetailPage() {
 
             <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-zinc-400 text-sm">
-                  Monthly Reviews
-                </CardTitle>
+                <CardTitle className="text-zinc-400">Monthly Reviews</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-bold text-white">
@@ -457,7 +453,8 @@ export default function TeamDetailPage() {
                       <div className="flex items-center gap-3">
                         <p className="font-semibold text-white">
                           {member.user.firstName || member.user.lastName
-                            ? `${member.user.firstName || ""} ${member.user.lastName || ""
+                            ? `${member.user.firstName || ""} ${
+                                member.user.lastName || ""
                               }`.trim()
                             : member.user.email}
                         </p>
@@ -474,7 +471,7 @@ export default function TeamDetailPage() {
                           className={cn(
                             "capitalize",
                             member.role === "OWNER" &&
-                            "bg-orange-500/20 text-orange-400 border-orange-500/50"
+                              "bg-orange-500/20 text-orange-400 border-orange-500/50"
                           )}
                         >
                           {member.role.toLowerCase()}
@@ -593,7 +590,6 @@ export default function TeamDetailPage() {
               <Button
                 type="button"
                 variant="destructive"
-                size="lg"
                 onClick={handleDeleteClick}
                 disabled={deleting}
                 className="bg-red-600 hover:bg-red-700"
@@ -617,7 +613,9 @@ export default function TeamDetailPage() {
               Delete Team?
             </DialogTitle>
             <DialogDescription className="text-zinc-400 text-center text-sm">
-              You're about to delete <span className="font-semibold text-white">"{team?.name}"</span>. This will permanently remove all team data, projects, and members.
+              You're about to delete{" "}
+              <span className="font-semibold text-white">"{team?.name}"</span>.
+              This will permanently remove all team data, projects, and members.
             </DialogDescription>
           </DialogHeader>
           <div className="py-2">

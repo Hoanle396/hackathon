@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Mail, CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import DashboardHeader from "@/components/layout/dashboard-header";
 
 interface PendingInvitation {
   id: string;
@@ -198,37 +199,27 @@ export default function InvitationsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 md:space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 pb-4 sm:pb-6 border-b border-zinc-800/50">
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-900/50 flex items-center justify-center flex-shrink-0">
-            <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-          </div>
-          <div className="space-y-1">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
-              Team Invitations
-            </h1>
-            <p className="text-zinc-400 text-sm sm:text-base">
-              Review and respond to pending team invitations
-            </p>
-          </div>
-        </div>
-      </div>
+      <DashboardHeader
+        icon={<Mail className="h-5 w-5 sm:h-6 sm:w-6 text-white" />}
+        title="Team Invitations"
+        description="Manage your pending team invitations"
+      />
 
       {/* Empty State */}
       {invitations.length === 0 ? (
         <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm shadow-2xl">
           <CardContent className="flex flex-col items-center justify-center py-24 space-y-8">
-            <div className="w-28 h-28 rounded-full bg-zinc-800 flex items-center justify-center shadow-2xl ring-4 ring-zinc-800/50 ring-offset-4 ring-offset-black">
-              <Mail className="h-14 w-14 text-zinc-400" />
+            <div className="w-24 h-24 rounded-full bg-zinc-800 flex items-center justify-center shadow-2xl ring-4 ring-zinc-800/50 ring-offset-4 ring-offset-black">
+              <Mail className="h-12 w-12 md:h-14 md:w-14 text-zinc-400" />
             </div>
             <div className="text-center space-y-4 max-w-md">
-              <h3 className="text-4xl font-bold text-white">
+              <h3 className="text-lg md:text-2xl font-bold text-white">
                 No Pending Invitations
               </h3>
-              <p className="text-zinc-400 text-base leading-relaxed">
+              <p className="text-zinc-400 text-sm leading-relaxed">
                 You don't have any team invitations at the moment.
               </p>
-              <p className="text-zinc-500 text-sm">
+              <p className="text-zinc-500 text-xs">
                 When someone invites you to a team, it will appear here.
               </p>
             </div>
@@ -261,11 +252,11 @@ export default function InvitationsPage() {
                           className={cn(
                             "capitalize font-semibold px-3 py-1",
                             invitation.team.plan.toUpperCase() ===
-                            "ENTERPRISE" &&
-                            "bg-red-500/10 text-red-400 border-red-500/30",
+                              "ENTERPRISE" &&
+                              "bg-red-500/10 text-red-400 border-red-500/30",
                             invitation.team.plan.toUpperCase() ===
-                            "PROFESSIONAL" &&
-                            "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                              "PROFESSIONAL" &&
+                              "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
                           )}
                         >
                           {invitation.team.plan.toLowerCase()}
@@ -282,9 +273,9 @@ export default function InvitationsPage() {
                       className={cn(
                         "px-4 py-2 font-bold capitalize text-sm",
                         invitation.role === "ADMIN" &&
-                        "bg-blue-500/10 text-blue-400 border-blue-500/30",
+                          "bg-blue-500/10 text-blue-400 border-blue-500/30",
                         invitation.role === "MEMBER" &&
-                        "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                          "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
                       )}
                     >
                       {invitation.role.toLowerCase()}
@@ -297,7 +288,10 @@ export default function InvitationsPage() {
                     <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-zinc-800/30 border border-zinc-800">
                       <Clock className="h-5 w-5 flex-shrink-0 text-zinc-500" />
                       <span
-                        className={cn("font-semibold", expired ? "text-red-400" : "text-zinc-300")}
+                        className={cn(
+                          "font-semibold",
+                          expired ? "text-red-400" : "text-zinc-300"
+                        )}
                       >
                         {formatExpiry(invitation.invitationExpiresAt)}
                       </span>

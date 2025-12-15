@@ -19,6 +19,7 @@ import { Key, Save, Settings, User, Mail, CheckCircle } from "lucide-react";
 import { authService, UpdateTokensData } from "@/services/auth.service";
 import { useAuthStore } from "@/store/auth";
 import { cn } from "@/lib/utils";
+import DashboardHeader from "@/components/layout/dashboard-header";
 
 export default function SettingsPage() {
   const { user, updateUser } = useAuthStore();
@@ -68,21 +69,11 @@ export default function SettingsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 md:space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 pb-4 sm:pb-6 border-b border-zinc-800/50">
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-900/50 flex items-center justify-center flex-shrink-0">
-            <Settings className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-          </div>
-          <div className="space-y-1">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
-              Settings
-            </h1>
-            <p className="text-zinc-400 text-sm sm:text-base">
-              Manage your account and integration tokens
-            </p>
-          </div>
-        </div>
-      </div>
+      <DashboardHeader
+        icon={<Settings className="h-5 w-5 sm:h-6 sm:w-6 text-white" />}
+        title="Settings"
+        description="Manage your account and integration tokens"
+      />
 
       {/* Account Information */}
       <Card className="bg-zinc-900/70 border-zinc-800 backdrop-blur-sm hover:border-zinc-600 shadow-2xl transition-all duration-300">
@@ -144,7 +135,10 @@ export default function SettingsPage() {
             {/* GitHub Token */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label htmlFor="githubToken" className="text-zinc-200 text-sm font-semibold">
+                <Label
+                  htmlFor="githubToken"
+                  className="text-zinc-200 text-sm font-semibold"
+                >
                   GitHub Personal Access Token
                 </Label>
                 {user.hasGithubToken && (
@@ -181,7 +175,10 @@ export default function SettingsPage() {
             {/* GitLab Token */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label htmlFor="gitlabToken" className="text-zinc-200 text-sm font-semibold">
+                <Label
+                  htmlFor="gitlabToken"
+                  className="text-zinc-200 text-sm font-semibold"
+                >
                   GitLab Personal Access Token
                 </Label>
                 {user.hasGitlabToken && (
@@ -255,11 +252,10 @@ export default function SettingsPage() {
             </div>
 
             {/* Submit Button */}
-            <div className="pt-4">
+            <div>
               <Button
                 type="submit"
                 disabled={loading}
-                size="lg"
                 className={cn(
                   "w-full sm:w-auto px-12 bg-white text-black font-semibold shadow-lg hover:shadow-xl hover:bg-zinc-200 transition-all duration-300 h-12",
                   loading && "opacity-60 cursor-not-allowed"

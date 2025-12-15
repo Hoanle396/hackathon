@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@bprogress/next/app";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
@@ -80,22 +80,26 @@ export default function NewTeamPage() {
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-zinc-800 flex items-center justify-center shadow-lg ring-2 ring-zinc-700 flex-shrink-0">
                 <Users className="h-5 w-5 sm:h-6 sm:w-6 text-zinc-300" />
               </div>
-              <CardTitle className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
+              <CardTitle className="text-2xl sm:text-3xl font-bold text-white">
                 Create New Team
               </CardTitle>
             </div>
-            <CardDescription className="text-zinc-400 text-sm sm:text-base flex items-center gap-2">
+            <CardDescription className="text-zinc-400 text-sm flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 flex-shrink-0"></span>
-              Set up a new team to invite members, manage projects, and collaborate efficiently
+              Set up a new team to invite members, manage projects, and
+              collaborate efficiently
             </CardDescription>
           </div>
         </CardHeader>
 
-        <CardContent className="pt-8">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        <CardContent className="pt-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Team Name */}
-            <div className="space-y-3">
-              <Label htmlFor="name" className="text-zinc-200 text-sm font-semibold">
+            <div className="space-y-2">
+              <Label
+                htmlFor="name"
+                className="text-zinc-200 text-sm font-semibold"
+              >
                 Team Name <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -105,13 +109,18 @@ export default function NewTeamPage() {
                 {...register("name", { required: "Team name is required" })}
               />
               {errors.name && (
-                <p className="text-sm text-red-500 flex items-center gap-2">{errors.name.message}</p>
+                <p className="text-sm text-red-500 flex items-center gap-2">
+                  {errors.name.message}
+                </p>
               )}
             </div>
 
             {/* Description */}
-            <div className="space-y-3">
-              <Label htmlFor="description" className="text-zinc-200 text-sm font-semibold">
+            <div className="space-y-2">
+              <Label
+                htmlFor="description"
+                className="text-zinc-200 text-sm font-semibold"
+              >
                 Description <span className="text-zinc-500">(Optional)</span>
               </Label>
               <Textarea
@@ -128,13 +137,12 @@ export default function NewTeamPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-8">
+            <div className="flex flex-col sm:flex-row gap-4 pt-2">
               <Button
                 type="submit"
                 disabled={loading}
-                size="lg"
                 className={cn(
-                  "flex-1 bg-white text-black font-semibold shadow-lg hover:shadow-xl hover:bg-zinc-200 transition-all duration-300 h-12",
+                  "flex-1 bg-white text-black font-semibold shadow-lg hover:shadow-xl hover:bg-zinc-200 transition-all duration-300",
                   loading && "opacity-60 cursor-not-allowed"
                 )}
               >
@@ -145,9 +153,8 @@ export default function NewTeamPage() {
               <Button
                 type="button"
                 variant="outline"
-                size="lg"
                 onClick={() => router.back()}
-                className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white hover:border-zinc-600 transition-all h-12"
+                className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white hover:border-zinc-600 transition-all"
               >
                 Cancel
               </Button>

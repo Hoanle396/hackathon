@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@bprogress/next/app";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
@@ -79,7 +79,11 @@ export default function NewProjectPage() {
       const project = await projectService.create(data);
       toast.success("Project created successfully!");
       // Redirect to success page with project info
-      router.push(`/dashboard/projects/success?name=${encodeURIComponent(data.name)}&id=${project.id}`);
+      router.push(
+        `/dashboard/projects/success?name=${encodeURIComponent(data.name)}&id=${
+          project.id
+        }`
+      );
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to create project");
     } finally {
@@ -104,12 +108,13 @@ export default function NewProjectPage() {
         <CardHeader className="pb-6 md:pb-8 border-b border-zinc-800/50">
           <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
             <div className="flex-1 space-y-2">
-              <CardTitle className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
+              <CardTitle className="text-xl sm:text-3xl font-bold text-white">
                 Create New Project
               </CardTitle>
-              <CardDescription className="text-zinc-400 text-sm sm:text-base flex items-center gap-2">
+              <CardDescription className="text-zinc-400 text-sm flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 flex-shrink-0"></span>
-                Add a repository to enable AI-powered code reviews and improve code quality
+                Add a repository to enable AI-powered code reviews and improve
+                code quality
               </CardDescription>
             </div>
             <div className="self-start sm:self-center">
@@ -118,11 +123,14 @@ export default function NewProjectPage() {
           </div>
         </CardHeader>
 
-        <CardContent className="pt-8">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        <CardContent className="pt-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Project Name */}
             <div className="space-y-3">
-              <Label htmlFor="name" className="text-zinc-200 text-sm font-semibold">
+              <Label
+                htmlFor="name"
+                className="text-zinc-200 text-sm font-semibold"
+              >
                 Project Name <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -140,7 +148,10 @@ export default function NewProjectPage() {
 
             {/* Team */}
             <div className="space-y-3">
-              <Label htmlFor="teamId" className="text-zinc-200 text-sm font-semibold">
+              <Label
+                htmlFor="teamId"
+                className="text-zinc-200 text-sm font-semibold"
+              >
                 Team <span className="text-red-500">*</span>
               </Label>
               <Select
@@ -174,7 +185,10 @@ export default function NewProjectPage() {
 
             {/* Platform */}
             <div className="space-y-3">
-              <Label htmlFor="type" className="text-zinc-200 text-sm font-semibold">
+              <Label
+                htmlFor="type"
+                className="text-zinc-200 text-sm font-semibold"
+              >
                 Platform <span className="text-red-500">*</span>
               </Label>
               <Select
@@ -186,10 +200,16 @@ export default function NewProjectPage() {
                   <SelectValue placeholder="Select platform" />
                 </SelectTrigger>
                 <SelectContent className="bg-zinc-900 border-zinc-700 w-full">
-                  <SelectItem value="github" className="text-zinc-200 focus:bg-zinc-800">
+                  <SelectItem
+                    value="github"
+                    className="text-zinc-200 focus:bg-zinc-800"
+                  >
                     🐙 GitHub
                   </SelectItem>
-                  <SelectItem value="gitlab" className="text-zinc-200 focus:bg-zinc-800">
+                  <SelectItem
+                    value="gitlab"
+                    className="text-zinc-200 focus:bg-zinc-800"
+                  >
                     🦊 GitLab
                   </SelectItem>
                 </SelectContent>
@@ -201,7 +221,10 @@ export default function NewProjectPage() {
 
             {/* Repository URL */}
             <div className="space-y-3">
-              <Label htmlFor="repositoryUrl" className="text-zinc-200 text-sm font-semibold">
+              <Label
+                htmlFor="repositoryUrl"
+                className="text-zinc-200 text-sm font-semibold"
+              >
                 Repository URL <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -226,7 +249,8 @@ export default function NewProjectPage() {
                     Don't forget to setup webhook!
                   </p>
                   <p className="text-zinc-400">
-                    After creating the project, configure the webhook in your repository settings.{" "}
+                    After creating the project, configure the webhook in your
+                    repository settings.{" "}
                     <WebhookSetupGuide
                       trigger={
                         <button
@@ -256,13 +280,17 @@ export default function NewProjectPage() {
               />
               <p className="text-xs text-zinc-500 flex items-center gap-2">
                 <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
-                This information helps the AI provide more accurate and relevant code reviews
+                This information helps the AI provide more accurate and relevant
+                code reviews
               </p>
             </div>
 
             {/* Discord Channel ID */}
             <div className="space-y-3">
-              <Label htmlFor="discordChannelId" className="text-zinc-200 text-sm font-semibold">
+              <Label
+                htmlFor="discordChannelId"
+                className="text-zinc-200 text-sm font-semibold"
+              >
                 Discord Channel ID (Optional)
               </Label>
               <Input
@@ -273,7 +301,8 @@ export default function NewProjectPage() {
               />
               <p className="text-xs text-zinc-500 flex items-center gap-2">
                 <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
-                Receive PR notifications and review results directly in Discord (requires bot setup)
+                Receive PR notifications and review results directly in Discord
+                (requires bot setup)
               </p>
             </div>
 
@@ -301,11 +330,10 @@ export default function NewProjectPage() {
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-8">
+            <div className="flex flex-col sm:flex-row gap-4 pt-2">
               <Button
                 type="submit"
                 disabled={loading}
-                size="lg"
                 className={cn(
                   "flex-1 bg-white text-black font-semibold shadow-lg hover:shadow-xl hover:bg-zinc-200 transition-all duration-300 h-12",
                   loading && "opacity-60 cursor-not-allowed"
@@ -318,7 +346,6 @@ export default function NewProjectPage() {
               <Button
                 type="button"
                 variant="outline"
-                size="lg"
                 onClick={() => router.back()}
                 className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white hover:border-zinc-600 transition-all h-12"
               >
