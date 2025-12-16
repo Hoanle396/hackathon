@@ -188,7 +188,7 @@ export default function InvitationsPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-32">
-        <div className="w-16 h-16 border-4 border-zinc-800 border-t-white rounded-full animate-spin" />
+        <div className="w-16 h-16 border-4 border-emerald-400/20 border-t-emerald-400 rounded-full animate-spin" />
         <p className="mt-6 text-zinc-500 text-lg font-medium">
           Loading invitations...
         </p>
@@ -207,7 +207,7 @@ export default function InvitationsPage() {
 
       {/* Empty State */}
       {invitations.length === 0 ? (
-        <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm shadow-2xl">
+        <Card className="bg-zinc-900/50 border-emerald-400/20 backdrop-blur-sm shadow-2xl hover:border-emerald-400/40 transition-all duration-300">
           <CardContent className="flex flex-col items-center justify-center py-24 space-y-8">
             <div className="w-24 h-24 rounded-full bg-zinc-800 flex items-center justify-center shadow-2xl ring-4 ring-zinc-800/50 ring-offset-4 ring-offset-black">
               <Mail className="h-12 w-12 md:h-14 md:w-14 text-zinc-400" />
@@ -235,7 +235,7 @@ export default function InvitationsPage() {
               <Card
                 key={invitation.id}
                 className={cn(
-                  "bg-zinc-900/70 border-zinc-800 backdrop-blur-sm hover:border-zinc-600 hover:shadow-2xl transition-all duration-300",
+                  "bg-zinc-900/70 border-emerald-400/20 backdrop-blur-sm hover:border-emerald-400/40 hover:shadow-2xl hover:shadow-emerald-500/20 transition-all duration-300",
                   expired && "opacity-60 border-zinc-700"
                 )}
                 style={{ animationDelay: `${index * 70}ms` }}
@@ -252,11 +252,11 @@ export default function InvitationsPage() {
                           className={cn(
                             "capitalize font-semibold px-3 py-1",
                             invitation.team.plan.toUpperCase() ===
-                              "ENTERPRISE" &&
-                              "bg-red-500/10 text-red-400 border-red-500/30",
+                            "ENTERPRISE" &&
+                            "bg-red-500/10 text-red-400 border-red-500/30",
                             invitation.team.plan.toUpperCase() ===
-                              "PROFESSIONAL" &&
-                              "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                            "PROFESSIONAL" &&
+                            "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
                           )}
                         >
                           {invitation.team.plan.toLowerCase()}
@@ -273,9 +273,9 @@ export default function InvitationsPage() {
                       className={cn(
                         "px-4 py-2 font-bold capitalize text-sm",
                         invitation.role === "ADMIN" &&
-                          "bg-blue-500/10 text-blue-400 border-blue-500/30",
+                        "bg-blue-500/10 text-blue-400 border-blue-500/30",
                         invitation.role === "MEMBER" &&
-                          "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                        "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
                       )}
                     >
                       {invitation.role.toLowerCase()}
@@ -308,7 +308,7 @@ export default function InvitationsPage() {
                         <Button
                           size="lg"
                           onClick={() => handleAccept(invitation)}
-                          className="bg-white text-black hover:bg-zinc-200 shadow-lg hover:shadow-xl font-semibold"
+                          className="bg-emerald-400 text-black hover:bg-emerald-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 font-semibold transition-all duration-300 hover:scale-[1.02]"
                         >
                           <CheckCircle className="h-5 w-5 mr-2" />
                           Accept

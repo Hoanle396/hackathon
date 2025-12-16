@@ -78,7 +78,7 @@ export default function DashboardPage() {
           <Button
             onClick={() => router.push("/dashboard/projects/new")}
             size="default"
-            className="bg-white text-black hover:bg-zinc-200 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold group w-full sm:w-auto"
+            className="bg-emerald-400 text-black hover:bg-emerald-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 transition-all duration-300 font-semibold group w-full sm:w-auto hover:scale-[1.02]"
           >
             <Plus className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
             Add Project
@@ -103,8 +103,8 @@ export default function DashboardPage() {
               className={cn(
                 "px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300",
                 selectedTeam === "all"
-                  ? "bg-white text-black shadow-lg"
-                  : "bg-zinc-800/50 text-zinc-300 hover:bg-zinc-800 hover:text-white border border-zinc-700 hover:border-zinc-600 hover:shadow-lg"
+                  ? "bg-emerald-400 text-black shadow-lg shadow-emerald-500/30"
+                  : "bg-zinc-800/50 text-zinc-300 hover:bg-zinc-800 hover:text-white border border-zinc-700 hover:border-emerald-400/40 hover:shadow-lg transition-all duration-300"
               )}
             >
               All Projects
@@ -116,8 +116,8 @@ export default function DashboardPage() {
                 className={cn(
                   "px-5 py-1.5 rounded-xl text-sm font-semibold transition-all duration-300",
                   selectedTeam === team.id
-                    ? "bg-white text-black shadow-lg"
-                    : "bg-zinc-800/50 text-zinc-300 hover:bg-zinc-800 hover:text-white border border-zinc-700 hover:border-zinc-600 hover:shadow-lg"
+                    ? "bg-emerald-400 text-black shadow-lg shadow-emerald-500/30"
+                    : "bg-zinc-800/50 text-zinc-300 hover:bg-zinc-800 hover:text-white border border-zinc-700 hover:border-emerald-400/40 hover:shadow-lg transition-all duration-300"
                 )}
               >
                 {team.name}
@@ -184,7 +184,7 @@ export default function DashboardPage() {
           {projects.map((project, index) => (
             <Card
               key={project.id}
-              className="group bg-zinc-900/70 border-zinc-800 hover:border-zinc-600 backdrop-blur-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 overflow-hidden"
+              className="group bg-zinc-900/70 border-zinc-800 hover:border-emerald-400/40 backdrop-blur-sm hover:shadow-2xl hover:shadow-emerald-500/20 hover:-translate-y-2 transition-all duration-300 overflow-hidden"
               style={{ animationDelay: `${index * 70}ms` }}
             >
               <CardHeader className="py-2">
@@ -240,7 +240,7 @@ export default function DashboardPage() {
                     className={cn(
                       "flex items-center gap-2.5 px-3 py-2 rounded-lg border transition-all duration-300",
                       project.autoReview
-                        ? "bg-emerald-500/10 border-emerald-500/30 hover:border-emerald-500/50"
+                        ? "bg-emerald-400/20 border-emerald-400/40 hover:border-emerald-400/60"
                         : "bg-zinc-800/30 border-zinc-700/50 hover:border-zinc-600"
                     )}
                   >

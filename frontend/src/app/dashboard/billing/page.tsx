@@ -490,7 +490,7 @@ export default function BillingPage() {
           ) : (
             <Button
               onClick={handleConnectWallet}
-              className="bg-white text-black hover:bg-zinc-200 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
+              className="bg-emerald-400 text-black hover:bg-emerald-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 transition-all duration-300 font-semibold hover:scale-[1.02]"
             >
               Connect Wallet
             </Button>
@@ -499,7 +499,7 @@ export default function BillingPage() {
       />
 
       {/* Context Selector (Team Selection) */}
-      <Card className="bg-zinc-900/50 backdrop-blur-sm border-zinc-800">
+      <Card className="bg-zinc-900/50 backdrop-blur-sm border-emerald-400/20 hover:border-emerald-400/40 transition-all duration-300">
         <CardContent className="py-6">
           <div className="flex items-center gap-4">
             <Label className="text-zinc-300 font-medium">Select Team:</Label>
@@ -820,8 +820,8 @@ export default function BillingPage() {
                         payment.status === "succeeded"
                           ? "bg-emerald-500/20"
                           : payment.status === "failed"
-                          ? "bg-red-500/20"
-                          : "bg-zinc-700"
+                            ? "bg-red-500/20"
+                            : "bg-zinc-700"
                       )}
                     >
                       {payment.status === "succeeded" ? (
@@ -842,8 +842,8 @@ export default function BillingPage() {
                             payment.status === "succeeded"
                               ? "default"
                               : payment.status === "failed"
-                              ? "destructive"
-                              : "secondary"
+                                ? "destructive"
+                                : "secondary"
                           }
                         >
                           {payment.status.toUpperCase()}

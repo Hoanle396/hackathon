@@ -80,8 +80,7 @@ export default function NewProjectPage() {
       toast.success("Project created successfully!");
       // Redirect to success page with project info
       router.push(
-        `/dashboard/projects/success?name=${encodeURIComponent(data.name)}&id=${
-          project.id
+        `/dashboard/projects/success?name=${encodeURIComponent(data.name)}&id=${project.id
         }`
       );
     } catch (error: any) {
@@ -97,14 +96,14 @@ export default function NewProjectPage() {
       <Button
         variant="ghost"
         onClick={() => router.back()}
-        className="text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
+        className="text-zinc-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-all duration-300"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Projects
       </Button>
 
       {/* Main Card */}
-      <Card className="bg-zinc-900/50 backdrop-blur-sm border-zinc-800 shadow-2xl hover:border-zinc-700 transition-colors">
+      <Card className="bg-zinc-900/50 backdrop-blur-sm border-emerald-400/20 shadow-2xl hover:border-emerald-400/40 transition-all duration-300">
         <CardHeader className="pb-6 md:pb-8 border-b border-zinc-800/50">
           <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
             <div className="flex-1 space-y-2">
@@ -136,7 +135,7 @@ export default function NewProjectPage() {
               <Input
                 id="name"
                 placeholder="e.g. E-commerce Platform, Mobile Banking App..."
-                className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 h-12 transition-all"
+                className="bg-zinc-800/50 border-zinc-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 text-white placeholder-zinc-500 h-12 transition-all duration-300"
                 {...register("name", { required: "Project name is required" })}
               />
               {errors.name && (
@@ -196,7 +195,7 @@ export default function NewProjectPage() {
                   setValue("type", value)
                 }
               >
-                <SelectTrigger className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white w-full h-12 transition-all">
+                <SelectTrigger className="bg-zinc-800/50 border-zinc-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 text-white w-full h-12 transition-all duration-300">
                   <SelectValue placeholder="Select platform" />
                 </SelectTrigger>
                 <SelectContent className="bg-zinc-900 border-zinc-700 w-full">
@@ -230,7 +229,7 @@ export default function NewProjectPage() {
               <Input
                 id="repositoryUrl"
                 placeholder="https://github.com/username/repo-name"
-                className="bg-zinc-800/50 border-zinc-700 focus:border-zinc-500 text-white placeholder-zinc-500 font-mono text-sm"
+                className="bg-zinc-800/50 border-zinc-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 text-white placeholder-zinc-500 font-mono text-sm transition-all duration-300"
                 {...register("repositoryUrl", {
                   required: "Repository URL is required",
                 })}
@@ -242,10 +241,10 @@ export default function NewProjectPage() {
               )}
 
               {/* Webhook Setup Reminder */}
-              <div className="mt-3 flex items-start gap-2 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                <BookOpen className="h-4 w-4 text-blue-400 flex-shrink-0 mt-0.5" />
+              <div className="mt-3 flex items-start gap-2 p-3 bg-emerald-500/10 border border-emerald-400/30 rounded-lg">
+                <BookOpen className="h-4 w-4 text-emerald-400 flex-shrink-0 mt-0.5" />
                 <div className="flex-1 text-sm">
-                  <p className="text-blue-300 font-medium mb-1">
+                  <p className="text-emerald-300 font-medium mb-1">
                     Don't forget to setup webhook!
                   </p>
                   <p className="text-zinc-400">
@@ -255,7 +254,7 @@ export default function NewProjectPage() {
                       trigger={
                         <button
                           type="button"
-                          className="text-blue-400 hover:text-blue-300 underline font-medium inline"
+                          className="text-emerald-400 hover:text-emerald-300 underline font-medium inline transition-colors duration-300"
                         >
                           View guide
                         </button>
@@ -275,7 +274,7 @@ export default function NewProjectPage() {
                 id="businessContext"
                 placeholder="Describe your project: main technologies, coding standards, important business logic, security concerns, performance requirements, etc."
                 rows={6}
-                className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 resize-none transition-all"
+                className="bg-zinc-800/50 border-zinc-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 text-white placeholder-zinc-500 resize-none transition-all duration-300"
                 {...register("businessContext")}
               />
               <p className="text-xs text-zinc-500 flex items-center gap-2">
@@ -286,25 +285,7 @@ export default function NewProjectPage() {
             </div>
 
             {/* Discord Channel ID */}
-            <div className="space-y-3">
-              <Label
-                htmlFor="discordChannelId"
-                className="text-zinc-200 text-sm font-semibold"
-              >
-                Discord Channel ID (Optional)
-              </Label>
-              <Input
-                id="discordChannelId"
-                placeholder="1234567890123456789"
-                className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 font-mono text-sm h-12 transition-all"
-                {...register("discordChannelId")}
-              />
-              <p className="text-xs text-zinc-500 flex items-center gap-2">
-                <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
-                Receive PR notifications and review results directly in Discord
-                (requires bot setup)
-              </p>
-            </div>
+
 
             {/* API Tokens Section */}
             <div className="space-y-4 p-5 rounded-xl bg-zinc-800/20 border border-zinc-800">
@@ -327,7 +308,7 @@ export default function NewProjectPage() {
                   id="githubToken"
                   type="password"
                   placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 font-mono h-12 transition-all"
+                  className="bg-zinc-800/50 border-zinc-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 text-white placeholder-zinc-500 font-mono h-12 transition-all duration-300"
                   {...register("githubToken")}
                 />
                 <p className="text-xs text-zinc-500 flex items-center gap-2">
@@ -357,6 +338,26 @@ export default function NewProjectPage() {
                 </p>
               </div>
 
+              <div className="space-y-3">
+                <Label
+                  htmlFor="discordChannelId"
+                  className="text-zinc-200 text-sm font-semibold"
+                >
+                  Discord Channel ID (Optional)
+                </Label>
+                <Input
+                  id="discordChannelId"
+                  placeholder="1234567890123456789"
+                  className="bg-zinc-800/50 border-zinc-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 text-white placeholder-zinc-500 font-mono text-sm h-12 transition-all duration-300"
+                  {...register("discordChannelId")}
+                />
+                <p className="text-xs text-zinc-500 flex items-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
+                  Receive PR notifications and review results directly in Discord
+                  (requires bot setup)
+                </p>
+              </div>
+
               {/* Discord Bot Token */}
               <div className="space-y-3">
                 <Label
@@ -369,7 +370,7 @@ export default function NewProjectPage() {
                   id="discordBotToken"
                   type="password"
                   placeholder="MTAxMjM0NTY3ODkwMTIzNDU2Nw.GABCDE.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                  className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 font-mono h-12 transition-all"
+                  className="bg-zinc-800/50 border-zinc-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 text-white placeholder-zinc-500 font-mono h-12 transition-all duration-300"
                   {...register("discordBotToken")}
                 />
                 <p className="text-xs text-zinc-500 flex items-center gap-2">
@@ -397,7 +398,7 @@ export default function NewProjectPage() {
                   id="autoReview"
                   checked={autoReview}
                   onCheckedChange={(checked) => setValue("autoReview", checked)}
-                  className="data-[state=checked]:bg-white"
+                  className="data-[state=checked]:bg-emerald-400"
                 />
               </div>
             </div>
@@ -408,7 +409,7 @@ export default function NewProjectPage() {
                 type="submit"
                 disabled={loading}
                 className={cn(
-                  "flex-1 bg-white text-black font-semibold shadow-lg hover:shadow-xl hover:bg-zinc-200 transition-all duration-300 h-12",
+                  "flex-1 bg-emerald-400 text-black font-semibold shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 hover:bg-emerald-300 transition-all duration-300 h-12 hover:scale-[1.02]",
                   loading && "opacity-60 cursor-not-allowed"
                 )}
               >

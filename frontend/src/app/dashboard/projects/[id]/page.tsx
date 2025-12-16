@@ -116,7 +116,7 @@ export default function EditProjectPage() {
   if (!project) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="w-16 h-16 border-4 border-zinc-800 border-t-white rounded-full animate-spin" />
+        <div className="w-16 h-16 border-4 border-emerald-400/20 border-t-emerald-400 rounded-full animate-spin" />
         <p className="ml-4 text-zinc-500 text-lg">Loading project...</p>
       </div>
     );
@@ -128,14 +128,14 @@ export default function EditProjectPage() {
       <Button
         variant="ghost"
         onClick={() => router.back()}
-        className="text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
+        className="text-zinc-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-all duration-300"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Projects
       </Button>
 
       {/* Main Card */}
-      <Card className="bg-zinc-900/50 backdrop-blur-sm border-zinc-800 shadow-2xl hover:border-zinc-700 transition-colors">
+      <Card className="bg-zinc-900/50 backdrop-blur-sm border-emerald-400/20 shadow-2xl hover:border-emerald-400/40 transition-all duration-300">
         <CardHeader className="pb-6 md:pb-8 border-b border-zinc-800/50">
           <div className="space-y-2">
             <CardTitle className="text-xl sm:text-3xl font-bold text-white">
@@ -164,7 +164,7 @@ export default function EditProjectPage() {
               <Input
                 id="name"
                 placeholder="e.g. E-commerce Platform"
-                className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 h-12 transition-all"
+                className="bg-zinc-800/50 border-zinc-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 text-white placeholder-zinc-500 h-12 transition-all duration-300"
                 {...register("name", { required: "Project name is required" })}
               />
               {errors.name && (
@@ -212,7 +212,7 @@ export default function EditProjectPage() {
                 id="businessContext"
                 placeholder="Describe key business logic, coding standards, security requirements, performance concerns, or anything the AI should know about this project..."
                 rows={6}
-                className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 resize-none transition-all"
+                className="bg-zinc-800/50 border-zinc-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 text-white placeholder-zinc-500 resize-none transition-all duration-300"
                 {...register("businessContext")}
               />
               <p className="text-xs text-zinc-500 flex items-center gap-2">
@@ -222,26 +222,6 @@ export default function EditProjectPage() {
               </p>
             </div>
 
-            {/* Discord Channel ID */}
-            <div className="space-y-3">
-              <Label
-                htmlFor="discordChannelId"
-                className="text-zinc-200 text-sm font-semibold"
-              >
-                Discord Channel ID (Optional)
-              </Label>
-              <Input
-                id="discordChannelId"
-                placeholder="1234567890123456789"
-                className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 font-mono text-sm h-12 transition-all"
-                {...register("discordChannelId")}
-              />
-              <p className="text-xs text-zinc-500 flex items-center gap-2">
-                <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
-                Receive PR notifications and AI review results directly in
-                Discord (bot setup required)
-              </p>
-            </div>
 
             {/* API Tokens Section */}
             <div className="space-y-4 p-5 rounded-xl bg-zinc-800/20 border border-zinc-800">
@@ -264,7 +244,7 @@ export default function EditProjectPage() {
                   id="githubToken"
                   type="password"
                   placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 font-mono h-12 transition-all"
+                  className="bg-zinc-800/50 border-zinc-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 text-white placeholder-zinc-500 font-mono h-12 transition-all duration-300"
                   {...register("githubToken")}
                 />
                 <p className="text-xs text-zinc-500 flex items-center gap-2">
@@ -285,7 +265,7 @@ export default function EditProjectPage() {
                   id="gitlabToken"
                   type="password"
                   placeholder="glpat-xxxxxxxxxxxxxxxxxxxx"
-                  className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 font-mono h-12 transition-all"
+                  className="bg-zinc-800/50 border-zinc-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 text-white placeholder-zinc-500 font-mono h-12 transition-all duration-300"
                   {...register("gitlabToken")}
                 />
                 <p className="text-xs text-zinc-500 flex items-center gap-2">
@@ -293,6 +273,28 @@ export default function EditProjectPage() {
                   Required scopes: api, read_api, write_repository
                 </p>
               </div>
+
+              {/* Discord Channel ID */}
+              <div className="space-y-3">
+                <Label
+                  htmlFor="discordChannelId"
+                  className="text-zinc-200 text-sm font-semibold"
+                >
+                  Discord Channel ID (Optional)
+                </Label>
+                <Input
+                  id="discordChannelId"
+                  placeholder="1234567890123456789"
+                  className="bg-zinc-800/50 border-zinc-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 text-white placeholder-zinc-500 font-mono text-sm h-12 transition-all duration-300"
+                  {...register("discordChannelId")}
+                />
+                <p className="text-xs text-zinc-500 flex items-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
+                  Receive PR notifications and AI review results directly in
+                  Discord (bot setup required)
+                </p>
+              </div>
+
 
               {/* Discord Bot Token */}
               <div className="space-y-3">
@@ -306,7 +308,7 @@ export default function EditProjectPage() {
                   id="discordBotToken"
                   type="password"
                   placeholder="MTAxMjM0NTY3ODkwMTIzNDU2Nw.GABCDE.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                  className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 font-mono h-12 transition-all"
+                  className="bg-zinc-800/50 border-zinc-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 text-white placeholder-zinc-500 font-mono h-12 transition-all duration-300"
                   {...register("discordBotToken")}
                 />
                 <p className="text-xs text-zinc-500 flex items-center gap-2">
@@ -335,7 +337,7 @@ export default function EditProjectPage() {
                   id="autoReview"
                   checked={autoReview}
                   onCheckedChange={(checked) => setValue("autoReview", checked)}
-                  className="data-[state=checked]:bg-white"
+                  className="data-[state=checked]:bg-emerald-400"
                 />
               </div>
 
@@ -356,7 +358,7 @@ export default function EditProjectPage() {
                   id="isActive"
                   checked={isActive}
                   onCheckedChange={(checked) => setValue("isActive", checked)}
-                  className="data-[state=checked]:bg-white"
+                  className="data-[state=checked]:bg-emerald-400"
                 />
               </div>
             </div>
@@ -367,7 +369,7 @@ export default function EditProjectPage() {
                 type="submit"
                 disabled={loading}
                 className={cn(
-                  "flex-1 bg-white text-black font-semibold shadow-lg hover:shadow-xl hover:bg-zinc-200 transition-all duration-300 h-12",
+                  "flex-1 bg-emerald-400 text-black font-semibold shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 hover:bg-emerald-300 transition-all duration-300 h-12 hover:scale-[1.02]",
                   loading && "opacity-60 cursor-not-allowed"
                 )}
               >

@@ -64,11 +64,11 @@ export function WebhookSetupGuide({ trigger }: WebhookSetupGuideProps) {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="flex flex-col max-w-7xl h-[90vh] overflow-hidden" onClose={() => setOpen(false)}>
+        <DialogContent className="flex flex-col max-w-5xl h-[90vh] overflow-hidden" onClose={() => setOpen(false)}>
           <DialogHeader className="flex-shrink-0 bg-zinc-900 pb-6 pt-6 px-6 sm:px-8 border-b border-zinc-800/50">
             <DialogTitle className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/20 flex items-center justify-center border border-blue-500/30 shadow-lg shadow-blue-500/10">
-                <Webhook className="h-6 w-6 text-blue-400" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 flex items-center justify-center border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
+                <Webhook className="h-6 w-6 text-emerald-400" />
               </div>
               <div>
                 <div className="text-2xl font-bold text-white mb-1">Webhook Setup Guide</div>
@@ -82,14 +82,14 @@ export function WebhookSetupGuide({ trigger }: WebhookSetupGuideProps) {
               <TabsList className="grid w-full grid-cols-2 h-12">
                 <TabsTrigger
                   value="github"
-                  className="data-[state=active]:bg-zinc-700"
+                  className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-300"
                 >
                   <Github className="h-4 w-4 mr-2" />
                   GitHub
                 </TabsTrigger>
                 <TabsTrigger
                   value="gitlab"
-                  className="data-[state=active]:bg-zinc-700"
+                  className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-300"
                 >
                   <GitBranch className="h-4 w-4 mr-2" />
                   GitLab
@@ -101,27 +101,27 @@ export function WebhookSetupGuide({ trigger }: WebhookSetupGuideProps) {
                 {/* Webhook URL Section */}
                 <div className="bg-gradient-to-br from-zinc-800/40 to-zinc-800/20 border border-zinc-700/70 rounded-xl p-6 shadow-lg">
                   <div className="flex items-center gap-3 mb-5">
-                    <div className="w-10 h-10 rounded-full bg-blue-500/15 flex items-center justify-center flex-shrink-0 border border-blue-500/30">
-                      <span className="text-blue-400 font-bold">1</span>
+                    <div className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0 border border-emerald-500/30">
+                      <span className="text-emerald-400 font-bold">1</span>
                     </div>
                     <h3 className="text-lg font-semibold text-white">Copy Webhook URL</h3>
                   </div>
                   <div className="flex gap-2">
-                    <code className="flex-1 px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-md text-sm text-blue-300 font-mono break-all">
+                    <code className="flex-1 px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-md text-sm text-emerald-300 font-mono break-all h-auto flex items-center">
                       {webhookUrl}/github
                     </code>
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="icon"
                       onClick={() =>
                         copyToClipboard(`${webhookUrl}/github`, "GitHub Webhook URL")
                       }
-                      className="border-zinc-700 hover:bg-zinc-800 flex-shrink-0"
+                      className="border-zinc-700 hover:bg-zinc-800 flex-shrink-0 h-auto py-3"
                     >
                       {copiedText === "GitHub Webhook URL" ? (
                         <CheckCircle2 className="h-4 w-4 text-green-400" />
                       ) : (
-                        <Copy className="h-4 w-4" />
+                        <Copy className="h-4 w-4 text-white" />
                       )}
                     </Button>
                   </div>
@@ -130,10 +130,10 @@ export function WebhookSetupGuide({ trigger }: WebhookSetupGuideProps) {
                 {/* Steps */}
                 <div className="space-y-4">
                   {/* Step 2 */}
-                  <div className="bg-gradient-to-br from-zinc-800/40 to-zinc-800/20 border border-zinc-700/70 rounded-xl p-6 shadow-lg hover:border-zinc-600/70 transition-colors">
+                  <div className="bg-gradient-to-br from-zinc-800/40 to-zinc-800/20 border border-emerald-400/30 rounded-xl p-6 shadow-lg hover:border-emerald-400/50 transition-all duration-300">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-500/15 flex items-center justify-center flex-shrink-0 border border-blue-500/30">
-                        <span className="text-blue-400 font-bold">2</span>
+                      <div className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0 border border-emerald-500/30">
+                        <span className="text-emerald-400 font-bold">2</span>
                       </div>
                       <div className="flex-1">
                         <h4 className="text-base font-semibold text-white mb-2">
@@ -147,10 +147,10 @@ export function WebhookSetupGuide({ trigger }: WebhookSetupGuideProps) {
                   </div>
 
                   {/* Step 3 */}
-                  <div className="bg-gradient-to-br from-zinc-800/40 to-zinc-800/20 border border-zinc-700/70 rounded-xl p-6 shadow-lg hover:border-zinc-600/70 transition-colors">
+                  <div className="bg-gradient-to-br from-zinc-800/40 to-zinc-800/20 border border-emerald-400/30 rounded-xl p-6 shadow-lg hover:border-emerald-400/50 transition-all duration-300">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-500/15 flex items-center justify-center flex-shrink-0 border border-blue-500/30">
-                        <span className="text-blue-400 font-bold">3</span>
+                      <div className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0 border border-emerald-500/30">
+                        <span className="text-emerald-400 font-bold">3</span>
                       </div>
                       <div className="flex-1">
                         <h4 className="text-base font-semibold text-white mb-3">
@@ -175,10 +175,10 @@ export function WebhookSetupGuide({ trigger }: WebhookSetupGuideProps) {
                   </div>
 
                   {/* Step 4 */}
-                  <div className="bg-gradient-to-br from-zinc-800/40 to-zinc-800/20 border border-zinc-700/70 rounded-xl p-6 shadow-lg hover:border-zinc-600/70 transition-colors">
+                  <div className="bg-gradient-to-br from-zinc-800/40 to-zinc-800/20 border border-emerald-400/30 rounded-xl p-6 shadow-lg hover:border-emerald-400/50 transition-all duration-300">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-500/15 flex items-center justify-center flex-shrink-0 border border-blue-500/30">
-                        <span className="text-blue-400 font-bold">4</span>
+                      <div className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0 border border-emerald-500/30">
+                        <span className="text-emerald-400 font-bold">4</span>
                       </div>
                       <div className="flex-1">
                         <h4 className="text-base font-semibold text-white mb-2">
@@ -188,8 +188,8 @@ export function WebhookSetupGuide({ trigger }: WebhookSetupGuideProps) {
                           Choose <span className="text-zinc-300 font-medium">"Let me select individual events"</span> and check these:
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          <div className="flex items-center gap-2 px-3 py-2.5 bg-green-500/5 border border-green-500/20 rounded">
-                            <CheckCircle2 className="h-4 w-4 text-green-400 flex-shrink-0" />
+                          <div className="flex items-center gap-2 px-3 py-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
                             <span className="text-zinc-200 text-sm">Pull requests</span>
                           </div>
                           <div className="flex items-center gap-2 px-3 py-2.5 bg-green-500/5 border border-green-500/20 rounded">
@@ -210,10 +210,10 @@ export function WebhookSetupGuide({ trigger }: WebhookSetupGuideProps) {
                   </div>
 
                   {/* Step 5 */}
-                  <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/10 border border-green-500/40 rounded-xl p-6 shadow-xl hover:border-green-500/60 transition-colors">
+                  <div className="bg-gradient-to-br from-emerald-500/15 to-emerald-500/10 border border-emerald-500/40 rounded-xl p-6 shadow-xl hover:border-emerald-500/60 transition-all duration-300">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-green-500/25 flex items-center justify-center flex-shrink-0 border border-green-500/40">
-                        <span className="text-green-400 font-bold">5</span>
+                      <div className="w-10 h-10 rounded-full bg-emerald-500/25 flex items-center justify-center flex-shrink-0 border border-emerald-500/40">
+                        <span className="text-emerald-400 font-bold">5</span>
                       </div>
                       <div className="flex-1">
                         <h4 className="text-base font-semibold text-white mb-2">
@@ -255,21 +255,21 @@ export function WebhookSetupGuide({ trigger }: WebhookSetupGuideProps) {
                     <h3 className="text-lg font-semibold text-white">Copy Webhook URL</h3>
                   </div>
                   <div className="flex gap-2">
-                    <code className="flex-1 px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-md text-sm text-orange-300 font-mono break-all">
+                    <code className="flex-1 px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-md text-sm text-orange-300 font-mono break-all h-auto flex items-center">
                       {webhookUrl}/gitlab
                     </code>
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="icon"
                       onClick={() =>
                         copyToClipboard(`${webhookUrl}/gitlab`, "GitLab Webhook URL")
                       }
-                      className="border-zinc-700 hover:bg-zinc-800 flex-shrink-0"
+                      className="border-zinc-700 hover:bg-zinc-800 flex-shrink-0 h-auto py-3"
                     >
                       {copiedText === "GitLab Webhook URL" ? (
                         <CheckCircle2 className="h-4 w-4 text-green-400" />
                       ) : (
-                        <Copy className="h-4 w-4" />
+                        <Copy className="h-4 w-4 text-white" />
                       )}
                     </Button>
                   </div>
@@ -278,10 +278,10 @@ export function WebhookSetupGuide({ trigger }: WebhookSetupGuideProps) {
                 {/* Steps */}
                 <div className="space-y-4">
                   {/* Step 2 */}
-                  <div className="bg-gradient-to-br from-zinc-800/40 to-zinc-800/20 border border-zinc-700/70 rounded-xl p-6 shadow-lg hover:border-zinc-600/70 transition-colors">
+                  <div className="bg-gradient-to-br from-zinc-800/40 to-zinc-800/20 border border-emerald-400/30 rounded-xl p-6 shadow-lg hover:border-emerald-400/50 transition-all duration-300">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-orange-500/15 flex items-center justify-center flex-shrink-0 border border-orange-500/30">
-                        <span className="text-orange-400 font-bold">2</span>
+                      <div className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0 border border-emerald-500/30">
+                        <span className="text-emerald-400 font-bold">2</span>
                       </div>
                       <div className="flex-1">
                         <h4 className="text-base font-semibold text-white mb-2">
@@ -295,10 +295,10 @@ export function WebhookSetupGuide({ trigger }: WebhookSetupGuideProps) {
                   </div>
 
                   {/* Step 3 */}
-                  <div className="bg-gradient-to-br from-zinc-800/40 to-zinc-800/20 border border-zinc-700/70 rounded-xl p-6 shadow-lg hover:border-zinc-600/70 transition-colors">
+                  <div className="bg-gradient-to-br from-zinc-800/40 to-zinc-800/20 border border-emerald-400/30 rounded-xl p-6 shadow-lg hover:border-emerald-400/50 transition-all duration-300">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-orange-500/15 flex items-center justify-center flex-shrink-0 border border-orange-500/30">
-                        <span className="text-orange-400 font-bold">3</span>
+                      <div className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0 border border-emerald-500/30">
+                        <span className="text-emerald-400 font-bold">3</span>
                       </div>
                       <div className="flex-1">
                         <h4 className="text-base font-semibold text-white mb-3">
@@ -319,10 +319,10 @@ export function WebhookSetupGuide({ trigger }: WebhookSetupGuideProps) {
                   </div>
 
                   {/* Step 4 */}
-                  <div className="bg-gradient-to-br from-zinc-800/40 to-zinc-800/20 border border-zinc-700/70 rounded-xl p-6 shadow-lg hover:border-zinc-600/70 transition-colors">
+                  <div className="bg-gradient-to-br from-zinc-800/40 to-zinc-800/20 border border-emerald-400/30 rounded-xl p-6 shadow-lg hover:border-emerald-400/50 transition-all duration-300">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-orange-500/15 flex items-center justify-center flex-shrink-0 border border-orange-500/30">
-                        <span className="text-orange-400 font-bold">4</span>
+                      <div className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0 border border-emerald-500/30">
+                        <span className="text-emerald-400 font-bold">4</span>
                       </div>
                       <div className="flex-1">
                         <h4 className="text-base font-semibold text-white mb-2">
@@ -332,8 +332,8 @@ export function WebhookSetupGuide({ trigger }: WebhookSetupGuideProps) {
                           Enable these triggers in the <span className="text-zinc-300 font-medium">Trigger</span> section:
                         </p>
                         <div className="space-y-2">
-                          <div className="flex items-center gap-2 px-3 py-2.5 bg-green-500/5 border border-green-500/20 rounded">
-                            <CheckCircle2 className="h-4 w-4 text-green-400 flex-shrink-0" />
+                          <div className="flex items-center gap-2 px-3 py-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
                             <span className="text-zinc-200 text-sm">Merge request events</span>
                           </div>
                           <div className="flex items-center gap-2 px-3 py-2.5 bg-green-500/5 border border-green-500/20 rounded">
@@ -346,10 +346,10 @@ export function WebhookSetupGuide({ trigger }: WebhookSetupGuideProps) {
                   </div>
 
                   {/* Step 5 */}
-                  <div className="bg-gradient-to-br from-zinc-800/40 to-zinc-800/20 border border-zinc-700/70 rounded-xl p-6 shadow-lg hover:border-zinc-600/70 transition-colors">
+                  <div className="bg-gradient-to-br from-zinc-800/40 to-zinc-800/20 border border-emerald-400/30 rounded-xl p-6 shadow-lg hover:border-emerald-400/50 transition-all duration-300">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-orange-500/15 flex items-center justify-center flex-shrink-0 border border-orange-500/30">
-                        <span className="text-orange-400 font-bold">5</span>
+                      <div className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0 border border-emerald-500/30">
+                        <span className="text-emerald-400 font-bold">5</span>
                       </div>
                       <div className="flex-1">
                         <h4 className="text-base font-semibold text-white mb-2">
@@ -363,10 +363,10 @@ export function WebhookSetupGuide({ trigger }: WebhookSetupGuideProps) {
                   </div>
 
                   {/* Step 6 */}
-                  <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/10 border border-green-500/40 rounded-xl p-6 shadow-xl hover:border-green-500/60 transition-colors">
+                  <div className="bg-gradient-to-br from-emerald-500/15 to-emerald-500/10 border border-emerald-500/40 rounded-xl p-6 shadow-xl hover:border-emerald-500/60 transition-all duration-300">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-green-500/25 flex items-center justify-center flex-shrink-0 border border-green-500/40">
-                        <span className="text-green-400 font-bold">6</span>
+                      <div className="w-10 h-10 rounded-full bg-emerald-500/25 flex items-center justify-center flex-shrink-0 border border-emerald-500/40">
+                        <span className="text-emerald-400 font-bold">6</span>
                       </div>
                       <div className="flex-1">
                         <h4 className="text-base font-semibold text-white mb-2">

@@ -85,7 +85,7 @@ export default function PricingPage() {
       <div className="relative max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-20">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
             Pricing built for teams
           </h1>
           <p className="mt-4 text-lg text-zinc-400 max-w-2xl mx-auto">
@@ -101,8 +101,8 @@ export default function PricingPage() {
                 className={cn(
                   "px-6 py-2 rounded-lg text-sm font-medium transition",
                   cycle === item
-                    ? "bg-white text-black"
-                    : "text-zinc-400 hover:text-white"
+                    ? "bg-emerald-400 text-black shadow-lg shadow-emerald-500/30"
+                    : "text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all duration-300"
                 )}
               >
                 {item === "MONTHLY" ? "Monthly" : "Yearly"}
@@ -125,9 +125,9 @@ export default function PricingPage() {
               <Card
                 key={plan.name}
                 className={cn(
-                  "bg-zinc-900/60 border border-zinc-800 rounded-2xl flex flex-col transition hover:border-zinc-600",
+                  "bg-zinc-900/70 border rounded-2xl flex flex-col transition-all duration-300 hover:border-emerald-400/40 hover:shadow-lg hover:shadow-emerald-500/20 hover:-translate-y-1",
                   plan.popular &&
-                    "border-white shadow-[0_0_0_1px_rgba(255,255,255,0.4)]"
+                  "border-emerald-400/50 shadow-xl shadow-emerald-500/30"
                 )}
               >
                 {/* Header */}
@@ -150,7 +150,7 @@ export default function PricingPage() {
                   </div>
 
                   {plan.popular && (
-                    <Badge className="mx-auto bg-white text-black">
+                    <Badge className="mx-auto bg-emerald-400 text-black font-semibold">
                       Most Popular
                     </Badge>
                   )}
@@ -172,10 +172,10 @@ export default function PricingPage() {
                   <Button
                     onClick={() => router.push("/dashboard/billing")}
                     className={cn(
-                      "mt-8 w-full rounded-xl py-2.5 font-semibold",
+                      "mt-8 w-full rounded-xl py-2.5 font-semibold transition-all duration-300",
                       plan.popular
-                        ? "bg-white text-black hover:bg-zinc-200"
-                        : "bg-zinc-800 text-white hover:bg-zinc-700"
+                        ? "bg-emerald-400 text-black hover:bg-emerald-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 hover:scale-[1.02]"
+                        : "bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-700 hover:border-emerald-400/40 hover:shadow-lg hover:shadow-emerald-500/20"
                     )}
                   >
                     {plan.price === 0 ? "Start for Free" : "Choose Plan"}

@@ -42,6 +42,7 @@ import {
   AlertCircle,
   Settings,
   ArrowUpRight,
+  Plane,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -273,7 +274,7 @@ export default function TeamDetailPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-32">
-        <div className="w-16 h-16 border-4 border-zinc-800 border-t-white rounded-full animate-spin" />
+        <div className="w-16 h-16 border-4 border-emerald-400/20 border-t-emerald-400 rounded-full animate-spin" />
         <p className="mt-6 text-zinc-500 text-lg">Loading team details...</p>
       </div>
     );
@@ -293,7 +294,7 @@ export default function TeamDetailPage() {
       <Button
         variant="ghost"
         onClick={() => router.back()}
-        className="text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
+        className="text-zinc-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-all duration-300"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Teams
@@ -322,9 +323,9 @@ export default function TeamDetailPage() {
             className={cn(
               "text-lg px-4 py-2 font-semibold capitalize",
               team.plan === "ENTERPRISE" &&
-                "bg-red-500/20 text-red-400 border-red-500/50",
+              "bg-red-500/20 text-red-400 border-red-500/50",
               team.plan === "PROFESSIONAL" &&
-                "bg-emerald-500/20 text-emerald-400 border-emerald-500/50"
+              "bg-emerald-500/20 text-emerald-400 border-emerald-500/50"
             )}
           >
             {team.plan.toLowerCase()}
@@ -332,8 +333,10 @@ export default function TeamDetailPage() {
           {team.plan !== "ENTERPRISE" && (
             <Button
               onClick={() => router.push(`/dashboard/billing?team=${teamId}`)}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+              size="default"
+              className="bg-emerald-400 text-black hover:bg-emerald-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 transition-all duration-300 font-semibold group w-full sm:w-auto hover:scale-[1.02]"
             >
+              <Plane className="h-5 w-5 mr-2 rotate-15 group-hover:-rotate-15 transition-transform duration-300" />
               Upgrade Plan
             </Button>
           )}
@@ -356,7 +359,7 @@ export default function TeamDetailPage() {
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
+            <Card className="bg-zinc-900/50 border-emerald-400/20 backdrop-blur-sm hover:border-emerald-400/40 transition-all duration-300">
               <CardHeader>
                 <CardTitle className="text-zinc-400">Current Plan</CardTitle>
               </CardHeader>
@@ -367,7 +370,7 @@ export default function TeamDetailPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
+            <Card className="bg-zinc-900/50 border-emerald-400/20 backdrop-blur-sm hover:border-emerald-400/40 transition-all duration-300">
               <CardHeader>
                 <CardTitle className="text-zinc-400">Project Limit</CardTitle>
               </CardHeader>
@@ -378,7 +381,7 @@ export default function TeamDetailPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
+            <Card className="bg-zinc-900/50 border-emerald-400/20 backdrop-blur-sm hover:border-emerald-400/40 transition-all duration-300">
               <CardHeader>
                 <CardTitle className="text-zinc-400">Monthly Reviews</CardTitle>
               </CardHeader>
@@ -392,7 +395,7 @@ export default function TeamDetailPage() {
             </Card>
           </div>
 
-          <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
+          <Card className="bg-zinc-900/50 border-emerald-400/20 backdrop-blur-sm hover:border-emerald-400/40 transition-all duration-300">
             <CardHeader>
               <CardTitle>Team Details</CardTitle>
             </CardHeader>
@@ -418,7 +421,7 @@ export default function TeamDetailPage() {
 
         {/* Members Tab */}
         <TabsContent value="members" className="space-y-6">
-          <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
+          <Card className="bg-zinc-900/50 border-emerald-400/20 backdrop-blur-sm hover:border-emerald-400/40 transition-all duration-300">
             <CardHeader>
               <div className="flex justify-between items-center">
                 <div>
@@ -429,7 +432,7 @@ export default function TeamDetailPage() {
                 </div>
                 <Button
                   onClick={() => setShowInviteDialog(true)}
-                  className="bg-gradient-to-r from-white to-zinc-400 text-black hover:from-zinc-200 hover:to-zinc-500 shadow-lg"
+                  className="bg-emerald-400 text-black hover:bg-emerald-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 transition-all duration-300 hover:scale-[1.02]"
                 >
                   <Mail className="h-4 w-4 mr-2" />
                   Invite Member
@@ -440,7 +443,7 @@ export default function TeamDetailPage() {
               {members.map((member) => (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between p-5 rounded-xl bg-zinc-800/50 border border-zinc-700 hover:border-zinc-600 transition-colors"
+                  className="flex items-center justify-between p-5 rounded-xl bg-zinc-800/50 border border-emerald-400/20 hover:border-emerald-400/40 transition-all duration-300"
                 >
                   <div className="flex items-center gap-4">
                     <Avatar className="h-12 w-12 ring-2 ring-zinc-700">
@@ -453,8 +456,7 @@ export default function TeamDetailPage() {
                       <div className="flex items-center gap-3">
                         <p className="font-semibold text-white">
                           {member.user.firstName || member.user.lastName
-                            ? `${member.user.firstName || ""} ${
-                                member.user.lastName || ""
+                            ? `${member.user.firstName || ""} ${member.user.lastName || ""
                               }`.trim()
                             : member.user.email}
                         </p>
@@ -471,7 +473,7 @@ export default function TeamDetailPage() {
                           className={cn(
                             "capitalize",
                             member.role === "OWNER" &&
-                              "bg-orange-500/20 text-orange-400 border-orange-500/50"
+                            "bg-orange-500/20 text-orange-400 border-orange-500/50"
                           )}
                         >
                           {member.role.toLowerCase()}
@@ -546,7 +548,7 @@ export default function TeamDetailPage() {
 
         {/* Settings Tab */}
         <TabsContent value="settings" className="space-y-6">
-          <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm">
+          <Card className="bg-zinc-900/50 border-emerald-400/20 backdrop-blur-sm hover:border-emerald-400/40 transition-all duration-300">
             <CardHeader>
               <CardTitle>Team Settings</CardTitle>
               <CardDescription>
@@ -558,7 +560,7 @@ export default function TeamDetailPage() {
                 <Label className="text-zinc-200">Team Name</Label>
                 <Input
                   defaultValue={team.name}
-                  className="bg-zinc-800/50 border-zinc-700 text-white"
+                  className="bg-zinc-800/50 border-zinc-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 text-white transition-all duration-300"
                   placeholder="Team name"
                 />
               </div>
@@ -570,7 +572,7 @@ export default function TeamDetailPage() {
                   placeholder="Team description (optional)"
                 />
               </div>
-              <Button className="bg-gradient-to-r from-white to-zinc-400 text-black hover:from-zinc-200 hover:to-zinc-500">
+              <Button className="bg-emerald-400 text-black hover:bg-emerald-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 transition-all duration-300 hover:scale-[1.02]">
                 Save Changes
               </Button>
             </CardContent>
@@ -663,7 +665,7 @@ export default function TeamDetailPage() {
                 placeholder="member@example.com"
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
-                className="bg-zinc-800/50 border-zinc-700 text-white placeholder-zinc-500"
+                className="bg-zinc-800/50 border-zinc-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 text-white placeholder-zinc-500 transition-all duration-300"
               />
             </div>
             <div className="space-y-2">
@@ -693,7 +695,7 @@ export default function TeamDetailPage() {
             <Button
               onClick={handleInviteMember}
               disabled={inviteLoading || !inviteEmail}
-              className="flex-1 bg-gradient-to-r from-white to-zinc-400 text-black hover:from-zinc-200 hover:to-zinc-500"
+              className="flex-1 bg-emerald-400 text-black hover:bg-emerald-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 transition-all duration-300 hover:scale-[1.02]"
             >
               {inviteLoading ? "Sending..." : "Send Invitation"}
             </Button>

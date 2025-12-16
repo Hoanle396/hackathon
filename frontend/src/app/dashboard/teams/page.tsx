@@ -93,7 +93,7 @@ export default function TeamsPage() {
           <Button
             onClick={() => router.push("/dashboard/teams/new")}
             size="default"
-            className="bg-white text-black hover:bg-zinc-200 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold group w-full sm:w-auto"
+            className="bg-emerald-400 text-black hover:bg-emerald-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 transition-all duration-300 font-semibold group w-full sm:w-auto hover:scale-[1.02]"
           >
             <Plus className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
             Create Team
@@ -105,7 +105,7 @@ export default function TeamsPage() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-32">
           <div className="relative">
-            <div className="w-20 h-20 border-4 border-zinc-800 border-t-white rounded-full animate-spin" />
+            <div className="w-20 h-20 border-4 border-emerald-400/20 border-t-emerald-400 rounded-full animate-spin" />
           </div>
           <div className="mt-8 space-y-2 text-center">
             <p className="text-zinc-300 text-lg font-semibold">
@@ -130,7 +130,7 @@ export default function TeamsPage() {
             <Button
               onClick={() => router.push("/dashboard/teams/new")}
               size="lg"
-              className="bg-white text-black hover:bg-zinc-200 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold group mt-4"
+              className="bg-emerald-400 text-black hover:bg-emerald-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 transition-all duration-300 font-semibold group mt-4 hover:scale-[1.02]"
             >
               <Plus className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
               Create Your First Team
@@ -143,7 +143,7 @@ export default function TeamsPage() {
           {teams.map((team, index) => (
             <Card
               key={team.id}
-              className="group bg-zinc-900/70 border-zinc-800 hover:border-zinc-600 backdrop-blur-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
+              className="group bg-zinc-900/70 border-emerald-400/20 hover:border-emerald-400/40 backdrop-blur-sm hover:shadow-2xl hover:shadow-emerald-500/20 hover:-translate-y-2 transition-all duration-300"
               style={{ animationDelay: `${index * 70}ms` }}
             >
               <CardHeader className="pb-5 pt-6">
@@ -163,7 +163,7 @@ export default function TeamsPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-xl transition-all hover:scale-110 duration-300"
+                      className="text-zinc-500 hover:text-emerald-300 hover:bg-emerald-500/10 rounded-xl transition-all hover:scale-110 duration-300"
                     >
                       <Settings className="h-5 w-5" />
                     </Button>
@@ -179,9 +179,9 @@ export default function TeamsPage() {
                     className={cn(
                       "font-semibold capitalize px-3 py-1",
                       team.plan === "enterprise" &&
-                        "bg-red-500/10 text-red-400 border-red-500/30",
+                      "bg-red-500/10 text-red-400 border-red-500/30",
                       team.plan === "professional" &&
-                        "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                      "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
                     )}
                   >
                     {team.plan}
@@ -191,9 +191,9 @@ export default function TeamsPage() {
                     className={cn(
                       "font-semibold capitalize px-3 py-1",
                       team.role === "owner" &&
-                        "bg-orange-500/10 text-orange-400 border-orange-500/30",
+                      "bg-orange-500/10 text-orange-400 border-orange-500/30",
                       team.role === "admin" &&
-                        "bg-blue-500/10 text-blue-400 border-blue-500/30"
+                      "bg-blue-500/10 text-blue-400 border-blue-500/30"
                     )}
                   >
                     {team.role}
@@ -231,7 +231,7 @@ export default function TeamsPage() {
                 <Link href={`/dashboard/teams/${team.id}`} className="block">
                   <Button
                     variant="outline"
-                    className="w-full border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white hover:border-zinc-600 transition-all h-11"
+                    className="w-full border-emerald-400/30 text-zinc-300 hover:bg-emerald-500/10 hover:text-emerald-300 hover:border-emerald-400/50 transition-all duration-300 h-11"
                   >
                     View Details
                   </Button>

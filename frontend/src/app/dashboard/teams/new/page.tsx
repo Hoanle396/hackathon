@@ -66,14 +66,14 @@ export default function NewTeamPage() {
       <Button
         variant="ghost"
         onClick={() => router.back()}
-        className="text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
+        className="text-zinc-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-all duration-300"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Teams
       </Button>
 
       {/* Main Card */}
-      <Card className="bg-zinc-900/50 backdrop-blur-sm border-zinc-800 shadow-2xl hover:border-zinc-700 transition-colors">
+      <Card className="bg-zinc-900/50 backdrop-blur-sm border-emerald-400/20 shadow-2xl hover:border-emerald-400/40 transition-all duration-300">
         <CardHeader className="pb-6 md:pb-8 border-b border-zinc-800/50">
           <div className="space-y-2 sm:space-y-3">
             <div className="flex items-center gap-3 sm:gap-4">
@@ -105,7 +105,7 @@ export default function NewTeamPage() {
               <Input
                 id="name"
                 placeholder="e.g. Engineering, Design Team, Startup Crew..."
-                className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 h-12 transition-all"
+                className="bg-zinc-800/50 border-zinc-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 text-white placeholder-zinc-500 h-12 transition-all duration-300"
                 {...register("name", { required: "Team name is required" })}
               />
               {errors.name && (
@@ -127,7 +127,7 @@ export default function NewTeamPage() {
                 id="description"
                 placeholder="Briefly describe the purpose of this team, who it's for, or any key details..."
                 rows={5}
-                className="bg-zinc-800/50 border-zinc-700 focus:border-white focus:ring-2 focus:ring-white/20 text-white placeholder-zinc-500 resize-none transition-all"
+                className="bg-zinc-800/50 border-zinc-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 text-white placeholder-zinc-500 resize-none transition-all duration-300"
                 {...register("description")}
               />
               <p className="text-xs text-zinc-500 flex items-center gap-2">
@@ -142,7 +142,7 @@ export default function NewTeamPage() {
                 type="submit"
                 disabled={loading}
                 className={cn(
-                  "flex-1 bg-white text-black font-semibold shadow-lg hover:shadow-xl hover:bg-zinc-200 transition-all duration-300",
+                  "flex-1 bg-emerald-400 text-black font-semibold shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 hover:bg-emerald-300 transition-all duration-300 hover:scale-[1.02]",
                   loading && "opacity-60 cursor-not-allowed"
                 )}
               >

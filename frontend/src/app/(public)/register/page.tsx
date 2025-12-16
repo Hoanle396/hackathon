@@ -57,10 +57,10 @@ export default function RegisterPage() {
 
   return (
     <BackgroundLines>
-      <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-black via-zinc-900 to-zinc-800 text-white">
-        <Card className="w-full max-w-md bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 shadow-xl">
+      <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-black via-zinc-950 to-black text-white">
+        <Card className="w-full max-w-md bg-zinc-900/90 backdrop-blur-xl border border-emerald-400/30 shadow-2xl shadow-emerald-500/20">
           <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-white via-zinc-300 to-zinc-500 bg-clip-text text-transparent">
+            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
               Create Account
             </CardTitle>
             <CardDescription className="text-zinc-400 text-sm">
@@ -78,7 +78,7 @@ export default function RegisterPage() {
                 <Input
                   id="fullName"
                   placeholder="John Doe"
-                  className="bg-zinc-800 border-zinc-700 text-white placeholder-zinc-500 focus:border-zinc-400"
+                  className="bg-zinc-800 border-zinc-700 text-white placeholder-zinc-500 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition-all duration-300"
                   {...register("fullName", {
                     required: "Full name is required",
                   })}
@@ -99,7 +99,7 @@ export default function RegisterPage() {
                   id="email"
                   type="email"
                   placeholder="you@email.com"
-                  className="bg-zinc-800 border-zinc-700 text-white placeholder-zinc-500 focus:border-zinc-400"
+                  className="bg-zinc-800 border-zinc-700 text-white placeholder-zinc-500 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition-all duration-300"
                   {...register("email", { required: "Email is required" })}
                 />
                 {errors.email && (
@@ -116,7 +116,7 @@ export default function RegisterPage() {
                   id="password"
                   type="password"
                   placeholder="••••••••"
-                  className="bg-zinc-800 border-zinc-700 text-white placeholder-zinc-500 focus:border-zinc-400"
+                  className="bg-zinc-800 border-zinc-700 text-white placeholder-zinc-500 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition-all duration-300"
                   {...register("password", {
                     required: "Password is required",
                     minLength: {
@@ -141,7 +141,7 @@ export default function RegisterPage() {
                   id="confirmPassword"
                   type="password"
                   placeholder="••••••••"
-                  className="bg-zinc-800 border-zinc-700 text-white placeholder-zinc-500 focus:border-zinc-400"
+                  className="bg-zinc-800 border-zinc-700 text-white placeholder-zinc-500 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition-all duration-300"
                   {...register("confirmPassword", {
                     required: "Please confirm your password",
                     validate: (value) =>
@@ -158,7 +158,7 @@ export default function RegisterPage() {
               {/* Submit */}
               <Button
                 type="submit"
-                className="w-full bg-white text-black font-semibold hover:bg-zinc-200"
+                className="w-full bg-emerald-400 text-black font-semibold hover:bg-emerald-300 transition-all duration-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 hover:scale-[1.02]"
                 disabled={loading}
               >
                 {loading ? "Signing up..." : "Sign Up"}
@@ -170,7 +170,7 @@ export default function RegisterPage() {
               Already have an account?{" "}
               <Link
                 href="/login"
-                className="text-white underline hover:text-zinc-300"
+                className="text-emerald-400 underline hover:text-emerald-300 transition-all duration-300"
               >
                 Login
               </Link>

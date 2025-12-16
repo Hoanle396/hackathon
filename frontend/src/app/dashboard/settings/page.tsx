@@ -49,11 +49,11 @@ export default function SettingsPage() {
       />
 
       {/* Account Information */}
-      <Card className="bg-zinc-900/70 border-zinc-800 backdrop-blur-sm hover:border-zinc-600 shadow-2xl transition-all duration-300">
+      <Card className="bg-zinc-900/70 border-emerald-400/20 backdrop-blur-sm hover:border-emerald-400/40 shadow-2xl transition-all duration-300">
         <CardHeader className="border-b border-zinc-800/50 pb-5 pt-6">
           <CardTitle className="flex items-center gap-3 text-white text-2xl">
-            <div className="p-2 rounded-lg bg-zinc-800">
-              <User className="h-5 w-5" />
+            <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-400/30">
+              <User className="h-5 w-5 text-emerald-400" />
             </div>
             Account Information
           </CardTitle>
@@ -63,7 +63,7 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row items-center gap-8">
-            <Avatar className="h-24 w-24 ring-4 ring-zinc-700 ring-offset-4 ring-offset-black">
+            <Avatar className="h-24 w-24 ring-4 ring-emerald-400/30 ring-offset-4 ring-offset-black">
               <AvatarFallback className="bg-gradient-to-br from-zinc-600 to-zinc-800 text-3xl font-bold text-white">
                 {user.fullName?.charAt(0).toUpperCase() ||
                   user.email.charAt(0).toUpperCase()}
@@ -91,19 +91,19 @@ export default function SettingsPage() {
       </Card>
 
       {/* Info Card */}
-      <Card className="bg-zinc-900/70 border-zinc-800 backdrop-blur-sm hover:border-zinc-600 shadow-2xl transition-all duration-300">
+      <Card className="bg-zinc-900/70 border-emerald-400/20 backdrop-blur-sm hover:border-emerald-400/40 shadow-2xl transition-all duration-300">
         <CardHeader className="border-b border-zinc-800/50 pb-5 pt-6">
           <CardTitle className="flex items-center gap-3 text-white text-2xl">
-            <div className="p-2 rounded-lg bg-zinc-800">
-              <Key className="h-5 w-5" />
+            <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-400/30">
+              <Key className="h-5 w-5 text-emerald-400" />
             </div>
             API Tokens
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
-          <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
-            <p className="text-blue-300 text-sm">
-              <strong>Note:</strong> API tokens (GitHub, GitLab, Discord Bot) are now configured per project. 
+          <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-400/30">
+            <p className="text-emerald-300 text-sm">
+              <strong>Note:</strong> API tokens (GitHub, GitLab, Discord Bot) are now configured per project.
               Go to your project settings to configure tokens for each individual project.
             </p>
           </div>
