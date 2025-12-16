@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like } from 'typeorm';
 import { Review, ReviewStatus } from './review.entity';
 import { ReviewComment, CommentType } from './review-comment.entity';
 
@@ -11,7 +11,7 @@ export class ReviewService {
     private reviewRepository: Repository<Review>,
     @InjectRepository(ReviewComment)
     private commentRepository: Repository<ReviewComment>,
-  ) {}
+  ) { }
 
   async createReview(data: {
     projectId: string;
@@ -73,6 +73,20 @@ export class ReviewService {
     return await this.commentRepository.find({
       where: { reviewId },
       order: { createdAt: 'ASC' },
+    });
+  }
+
+  async findCommentByExternalId(externalCommentId: string) {
+    return await this.commentRepository.findOne({
+      where: { externalCommentId },
+    });
+  }
+
+  async findCommentByDiscussionId(discussionId: string) {
+    return await this.commentRepository.findOne({
+      where: {
+        externalCommentId: Like(`%${discussionId}%`),
+      },
     });
   }
 }

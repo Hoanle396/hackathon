@@ -32,15 +32,24 @@ export class WebhookService {
     private cacheService: ReviewCacheService,
     private tokenUsageService: TokenUsageService,
     private subscriptionService: SubscriptionService,
-  ) {}
+  ) { }
 
   async handlePullRequestEvent(payload: any, source: 'github' | 'gitlab') {
     try {
       let prData = this.extractPullRequestData(payload, source);
 
       console.log('PR Data extracted:', prData);
-      
+
+      // Explicitly filter out closed, merged, and other non-reviewable actions
+      const ignoredActions = ['closed', 'merged', 'locked', 'unlocked', 'edited', 'assigned', 'unassigned', 'labeled', 'unlabeled'];
+      if (ignoredActions.includes(prData.action)) {
+        this.logger.log(`Ignoring PR action: ${prData.action}`);
+        return;
+      }
+
+      // Only process opened and synchronize actions
       if (prData.action !== 'opened' && prData.action !== 'synchronize') {
+        this.logger.log(`Unhandled PR action: ${prData.action}`);
         return;
       }
 
@@ -110,7 +119,7 @@ export class WebhookService {
 
       if (subscription) {
         const hasCredit = await this.subscriptionService.checkUsageLimit(subscription.id);
-        
+
         if (!hasCredit) {
           // Limit reached - send notifications and skip review
           const usage = await this.subscriptionService.getUsage(subscription.id);
@@ -152,7 +161,7 @@ export class WebhookService {
 
           // Update review status
           await this.reviewService.updateReviewStatus(reviewId, ReviewStatus.FAILED);
-          
+
           return; // Stop processing
         }
       }
@@ -182,11 +191,17 @@ export class WebhookService {
   async handleCommentEvent(payload: any, source: 'github' | 'gitlab') {
     try {
       this.logger.log(`Handling comment event from ${source}`);
-      
+
       const commentData = await this.extractCommentData(payload, source);
 
       if (!commentData) {
         this.logger.warn('Failed to extract comment data');
+        return;
+      }
+
+      // Check if this comment is from the AI bot itself
+      if (commentData.isBotComment) {
+        this.logger.log(`Skipping comment from bot itself (comment ID: ${commentData.commentId})`);
         return;
       }
 
@@ -207,12 +222,12 @@ export class WebhookService {
           where: { id: commentData.projectId },
           relations: ['user'],
         });
-        
+
         if (!project) {
           this.logger.error('Project not found');
           return;
         }
-      
+
 
         const newReview = await this.reviewService.createReview({
           projectId: commentData.projectId,
@@ -223,14 +238,14 @@ export class WebhookService {
           branch: 'unknown',
           author: commentData.author,
         });
-        
+
         this.logger.log(`✅ Processing comment in background...`);
-        
+
         // Process in background
         this.handleCommentWithReview(newReview, commentData, source, project).catch(error => {
           this.logger.error('Background comment processing failed:', error);
         });
-        
+
         return;
       }
 
@@ -283,9 +298,9 @@ export class WebhookService {
       this.logger.log(`Saved user comment from ${commentData.author}`);
 
       // Check if should reply (reply to AI or mention bot)
-      const shouldReply = commentData.isReplyToAi || 
-                         commentData.content.includes('@ai-reviewer') ||
-                         commentData.content.includes('@bot');
+      const shouldReply = commentData.isReplyToAi ||
+        commentData.content.includes('@ai-reviewer') ||
+        commentData.content.includes('@bot');
 
       if (!shouldReply) {
         this.logger.log('No AI reply needed');
@@ -319,25 +334,42 @@ export class WebhookService {
       this.logger.log(`AI reply generated: ${aiReply.substring(0, 100)}...`);
 
       // Post reply to GitHub/GitLab
-      if (commentData.lineNumber && commentData.filePath) {
-        // Reply to inline comment
+      // Determine the comment type and reply accordingly
+      const isReviewComment = commentData.filePath && commentData.lineNumber;
+      const isThreadedComment = !!commentData.parentCommentId; // Has in_reply_to_id from webhook
+      
+      if (isReviewComment || isThreadedComment) {
+        // This is either:
+        // 1. A review comment (inline on code), OR
+        // 2. A reply to another comment (threaded comment)
+        // Both should use createReplyForReviewComment to maintain threading
+        this.logger.log(`Replying to ${isReviewComment ? 'review' : 'threaded'} comment`);
+        this.logger.log(`File: ${commentData.filePath || 'N/A'}:${commentData.lineNumber || 'N/A'}`);
+        this.logger.log(`Comment ID: ${commentData.commentId}, Parent ID: ${commentData.parentCommentId || 'none'}, IsReplyToAi: ${commentData.isReplyToAi}`);
+        if (source === 'gitlab') {
+          this.logger.log(`Discussion ID: ${(commentData as any).discussionId || 'none'}`);
+        }
+        
         await this.postReplyToComment(
+          project,
+          commentData.pullRequestNumber.toString(),
+          commentData.commentId, // Always reply to the current user comment
+          aiReply,
+          commentData.filePath || '',
+          commentData.lineNumber || 0,
+          source,
+          (commentData as any).discussionId, // Pass GitLab discussion ID
+        );
+      } else {
+        // Reply to general PR comment (issue comment) that is NOT part of a thread
+        // These don't have threading support on GitHub, so post as new comment with mention
+        this.logger.log(`Replying to standalone PR comment ${commentData.commentId}`);
+        await this.postReplyToGeneralComment(
           project,
           commentData.pullRequestNumber.toString(),
           commentData.commentId,
           aiReply,
-          commentData.filePath,
-          commentData.lineNumber,
-          source,
-        );
-      } else {
-        // Reply to general comment
-        await this.postComment(
-          project,
-          commentData.pullRequestNumber.toString(),
-          `@${commentData.author} ${aiReply}`,
-          null,
-          null,
+          commentData.author, // Pass author for @mention
           source,
         );
       }
@@ -431,7 +463,7 @@ export class WebhookService {
 
         // Use patch (diff) for review if available, otherwise use full content
         const codeToReview = file.patch || file.content;
-        
+
         // Use new line-based review method (RabbitCode AI style)
         if (file.patch) {
           const reviewResult = await this.aiService.reviewCodeWithLineComments({
@@ -451,7 +483,7 @@ export class WebhookService {
           // Check if there are line comments
           if (reviewResult.lineComments.length > 0) {
             this.logger.log(`Found ${reviewResult.lineComments.length} line comments for ${file.filename}`);
-            
+
             // Post inline comments directly to specific lines
             for (const lineComment of reviewResult.lineComments) {
               // Format enhanced comment body
@@ -665,7 +697,7 @@ export class WebhookService {
           await this.subscriptionService.incrementUsage(subscription.id, 1);
           const newCount = subscription.currentMonthReviews + 1;
           this.logger.log(`📊 Incremented usage for subscription ${subscription.id}: ${newCount}/${subscription.monthlyReviewLimit}`);
-          
+
           // Check if approaching limit (80% or more)
           const usage = await this.subscriptionService.getUsage(subscription.id);
           if (usage.usagePercentage >= 80 && usage.usagePercentage < 100) {
@@ -675,7 +707,7 @@ export class WebhookService {
               `📉 **Remaining:** ${usage.remainingReviews} reviews\n\n` +
               `💡 Consider upgrading your plan to avoid interruptions.\n\n` +
               `[View Billing →](${process.env.FRONTEND_URL || 'https://yourapp.com'}/dashboard/billing)`;
-            
+
             // Send warning to Discord only (not to PR to avoid spam)
             const botToken = project.user?.discordBotToken;
             if (this.discordService.isEnabled(botToken) && project.discordChannelId && botToken) {
@@ -761,7 +793,7 @@ export class WebhookService {
       try {
         // Get file diff/patch
         const patch = file.patch || '';
-        
+
         // Get full file content from head commit
         const { data: fileData } = await octokit.repos.getContent({
           owner,
@@ -793,7 +825,6 @@ export class WebhookService {
   }
 
   private async fetchGitlabFileContents(project: Project, prData: any) {
-    console.log( project.user.gitlabToken)
     const api = new Gitlab({
       token: project.user.gitlabToken,
       host: this.getGitlabHost(project.repositoryUrl),
@@ -946,7 +977,7 @@ export class WebhookService {
       }
     } catch (error) {
       this.logger.error(`❌ Failed to post line comment on ${lineComment.path}:${lineComment.line}:`, error);
-      
+
       // Log detailed error information for debugging
       if (error.response) {
         this.logger.error(`API Error Response (${source}):`, {
@@ -959,7 +990,7 @@ export class WebhookService {
       } else if (error.message) {
         this.logger.error('Error message:', error.message);
       }
-      
+
       // Fallback: post as general comment if line comment fails
       this.logger.log(`Falling back to general comment for ${lineComment.path}:${lineComment.line}`);
       try {
@@ -989,6 +1020,7 @@ export class WebhookService {
     filePath: string,
     lineNumber: number,
     source: 'github' | 'gitlab',
+    discussionId?: string, // GitLab discussion ID
   ) {
     try {
       if (source === 'github') {
@@ -998,8 +1030,13 @@ export class WebhookService {
 
         const [owner, repo] = this.parseGithubUrl(project.repositoryUrl);
 
+        this.logger.log(`🔍 Attempting to create threaded reply:`);
+        this.logger.log(`   Owner: ${owner}, Repo: ${repo}`);
+        this.logger.log(`   PR#: ${pullRequestId}, Comment ID: ${commentId}`);
+        this.logger.log(`   File: ${filePath}:${lineNumber}`);
+
         // Reply to review comment (creates threaded reply)
-        await octokit.pulls.createReplyForReviewComment({
+        const response = await octokit.pulls.createReplyForReviewComment({
           owner,
           repo,
           pull_number: parseInt(pullRequestId),
@@ -1007,7 +1044,8 @@ export class WebhookService {
           body: reply,
         });
 
-        this.logger.log(`✅ Posted reply to comment ${commentId}`);
+        this.logger.log(`✅ Posted reply to comment ${commentId} - New comment ID: ${response.data.id}`);
+        this.logger.log(`   In reply to: ${response.data.in_reply_to_id || 'N/A'}`);
       } else if (source === 'gitlab') {
         const api = new Gitlab({
           token: project.user.gitlabToken,
@@ -1016,17 +1054,38 @@ export class WebhookService {
 
         const projectId = this.parseGitlabUrl(project.repositoryUrl);
 
-        // Reply in the same discussion thread
-        await api.MergeRequestNotes.create(
-          projectId,
-          parseInt(pullRequestId),
-          reply,
-          {
-            discussion_id: commentId,
-          },
-        );
+        this.logger.log(`🔍 Attempting to create GitLab threaded reply:`);
+        this.logger.log(`   Project ID: ${projectId}`);
+        this.logger.log(`   MR IID: ${pullRequestId}`);
+        this.logger.log(`   Discussion ID: ${discussionId || 'none'}`);
+        this.logger.log(`   Comment ID: ${commentId}`);
 
-        this.logger.log(`✅ Posted reply to comment ${commentId}`);
+        // Reply in the same discussion thread
+        // GitLab: Use addNote to reply in an existing discussion
+        if (discussionId) {
+          this.logger.log(`   Adding note to discussion ${discussionId}`);
+          
+          const response = await api.MergeRequestDiscussions.addNote(
+            projectId,
+            parseInt(pullRequestId), // MR IID
+            discussionId, // Discussion ID
+            parseInt(commentId), // Note ID we're replying to
+            reply
+          );
+
+          this.logger.log(`✅ Posted GitLab reply - Note ID: ${response.id}, Discussion ID: ${discussionId}`);
+        } else {
+          // Create new discussion if no discussionId (shouldn't happen, but as fallback)
+          this.logger.log(`   No discussion ID, creating new note on MR`);
+          
+          const response = await api.MergeRequestNotes.create(
+            projectId,
+            parseInt(pullRequestId),
+            reply,
+          );
+
+          this.logger.log(`✅ Posted GitLab note - Note ID: ${response.id}`);
+        }
       }
     } catch (error) {
       this.logger.error(`Failed to post reply to comment ${commentId}:`, error);
@@ -1041,6 +1100,61 @@ export class WebhookService {
       );
     }
   }
+
+  /**
+   * Post reply to a general PR comment (issue comment, not review comment)
+   */
+  private async postReplyToGeneralComment(
+    project: Project,
+    pullRequestId: string,
+    commentId: string,
+    reply: string,
+    authorUsername: string,
+    source: 'github' | 'gitlab',
+  ) {
+    try {
+      if (source === 'github') {
+        const octokit = new Octokit({
+          auth: project.user.githubToken,
+        });
+
+        const [owner, repo] = this.parseGithubUrl(project.repositoryUrl);
+
+        // For issue comments on PRs, GitHub doesn't have threaded replies
+        // Add @mention for context
+        const replyWithMention = `@${authorUsername}\n\n${reply}`;
+        
+        await octokit.issues.createComment({
+          owner,
+          repo,
+          issue_number: parseInt(pullRequestId),
+          body: replyWithMention,
+        });
+
+        this.logger.log(`✅ Posted reply to general comment ${commentId}`);
+      } else if (source === 'gitlab') {
+        const api = new Gitlab({
+          token: project.user.gitlabToken,
+          host: this.getGitlabHost(project.repositoryUrl),
+        });
+
+        const projectId = this.parseGitlabUrl(project.repositoryUrl);
+
+        // For GitLab, create a note on the merge request
+        await api.MergeRequestNotes.create(
+          projectId,
+          parseInt(pullRequestId),
+          reply,
+        );
+
+        this.logger.log(`✅ Posted reply to general comment ${commentId}`);
+      }
+    } catch (error) {
+      this.logger.error(`Failed to post reply to general comment ${commentId}:`, error);
+      throw error;
+    }
+  }
+
 
   private async postComment(
     project: Project,
@@ -1112,10 +1226,10 @@ export class WebhookService {
       });
 
       const projectId = this.parseGitlabUrl(project.repositoryUrl);
-      
+
       // Fetch MR details
       const mr: any = await api.MergeRequests.show(projectId, prData.pullRequestNumber);
-      
+
       if (mr.diff_refs) {
         this.logger.log('Got diff_refs from GitLab API:', mr.diff_refs);
         return {
@@ -1128,7 +1242,7 @@ export class WebhookService {
     } catch (error) {
       this.logger.error('Failed to enrich GitLab MR data:', error);
     }
-    
+
     return prData;
   }
 
@@ -1151,9 +1265,23 @@ export class WebhookService {
     } else {
       // GitLab MR payload
       const diffRefs = payload.object_attributes.diff_refs || {};
-      
+      const state = payload.object_attributes.state;
+      const action = payload.object_attributes.action;
+
+      // Map GitLab states/actions to normalized actions
+      let normalizedAction = 'synchronize';
+      if (state === 'opened' || action === 'open') {
+        normalizedAction = 'opened';
+      } else if (state === 'closed' || action === 'close') {
+        normalizedAction = 'closed';
+      } else if (state === 'merged' || action === 'merge') {
+        normalizedAction = 'merged';
+      } else if (action === 'update') {
+        normalizedAction = 'synchronize';
+      }
+
       return {
-        action: payload.object_attributes.state === 'opened' ? 'opened' : 'synchronize',
+        action: normalizedAction,
         pullRequestId: payload.object_attributes.iid.toString(),
         pullRequestNumber: payload.object_attributes.iid,
         title: payload.object_attributes.title,
@@ -1176,10 +1304,10 @@ export class WebhookService {
       // GitHub comment event
       const comment = payload.comment;
       const issue = payload.issue || payload.pull_request;
-      
+
       // Check if it's a review comment (inline) or issue comment (general)
       const isReviewComment = !!comment.path;
-      
+
       // Get the PR from repository
       const repositoryUrl = payload.repository.html_url;
       const project = await this.projectRepository.findOne({
@@ -1192,22 +1320,26 @@ export class WebhookService {
         return null;
       }
 
+      // Check if this comment was posted by the AI bot itself
+      // AI comments are saved in our database with types AI_GENERATED or AI_REPLY
+      // Query directly by externalCommentId for efficiency
+      const existingComment = await this.reviewService.findCommentByExternalId(comment.id.toString());
+      const isBotComment = existingComment &&
+        (existingComment.type === CommentType.AI_GENERATED || existingComment.type === CommentType.AI_REPLY);
+
       // Check if this is a reply to AI comment
       let isReplyToAi = false;
       let aiComment = '';
       let parentCommentId = null;
-      
+
       // For review comments, check if replying to AI
       if (comment.in_reply_to_id) {
         parentCommentId = comment.in_reply_to_id.toString();
         // Check if parent comment is from AI
-        const parentComment = await this.reviewService.getCommentsByReview(project.id);
-        const aiParent = parentComment.find(
-          c => c.externalCommentId === parentCommentId && c.type === CommentType.AI_GENERATED
-        );
-        if (aiParent) {
+        const parentComment = await this.reviewService.findCommentByExternalId(parentCommentId);
+        if (parentComment && parentComment.type === CommentType.AI_GENERATED) {
           isReplyToAi = true;
-          aiComment = aiParent.content;
+          aiComment = parentComment.content;
         }
       }
 
@@ -1235,7 +1367,7 @@ export class WebhookService {
         }
       }
 
-      return {
+      const commentData = {
         projectId: project.id,
         pullRequestId: issue.id.toString(),
         pullRequestNumber: issue.number,
@@ -1247,15 +1379,26 @@ export class WebhookService {
         author: comment.user.login,
         parentCommentId,
         isReplyToAi,
+        isBotComment,
         codeSnippet,
         aiComment,
         commitId: comment.commit_id,
       };
+
+      this.logger.log(`📊 Extracted GitHub comment data:`);
+      this.logger.log(`   Comment ID: ${commentData.commentId}`);
+      this.logger.log(`   Parent ID: ${commentData.parentCommentId || 'none'}`);
+      this.logger.log(`   Is review comment: ${isReviewComment}`);
+      this.logger.log(`   File: ${commentData.filePath || 'N/A'}`);
+      this.logger.log(`   Line: ${commentData.lineNumber || 'N/A'}`);
+      this.logger.log(`   in_reply_to_id from webhook: ${comment.in_reply_to_id || 'none'}`);
+
+      return commentData;
     } else {
       // GitLab comment event
       const note = payload.object_attributes;
       const mergeRequest = payload.merge_request;
-      
+
       const projectId = payload.project.id;
       const project = await this.projectRepository.findOne({
         where: { repositoryUrl: payload.project.web_url },
@@ -1267,24 +1410,34 @@ export class WebhookService {
         return null;
       }
 
+      // Check if this comment was posted by the AI bot itself
+      // Query directly by externalCommentId
+      const existingComment = await this.reviewService.findCommentByExternalId(note.id.toString());
+      const isBotComment = existingComment &&
+        (existingComment.type === CommentType.AI_GENERATED || existingComment.type === CommentType.AI_REPLY);
+
       // Check if it's a discussion note (inline comment)
       const isInlineComment = note.type === 'DiffNote';
-      
-      // Check if replying to AI
+
+      // Check if replying to AI and get parent context
       let isReplyToAi = false;
       let aiComment = '';
       let parentCommentId = null;
 
+      // GitLab: If this note has a discussion_id, it's part of a threaded discussion
       if (note.discussion_id) {
-        // Check if discussion contains AI comment
-        const comments = await this.reviewService.getCommentsByReview(project.id);
-        const aiParent = comments.find(
-          c => c.externalCommentId.includes(note.discussion_id) && c.type === CommentType.AI_GENERATED
-        );
-        if (aiParent) {
-          isReplyToAi = true;
-          aiComment = aiParent.content;
-          parentCommentId = aiParent.externalCommentId;
+        // First, check if this discussion contains an AI comment
+        const discussionComment = await this.reviewService.findCommentByDiscussionId(note.discussion_id);
+
+        if (discussionComment) {
+          // This is a reply in a discussion thread
+          parentCommentId = discussionComment.externalCommentId;
+
+          // Check if replying specifically to AI
+          if (discussionComment.type === CommentType.AI_GENERATED || discussionComment.type === CommentType.AI_REPLY) {
+            isReplyToAi = true;
+            aiComment = discussionComment.content;
+          }
         }
       }
 
@@ -1296,13 +1449,13 @@ export class WebhookService {
             token: project.user.gitlabToken,
             host: this.getGitlabHost(project.repositoryUrl),
           });
-          
+
           const fileContent = await api.RepositoryFiles.show(
             projectId,
             note.position.new_path,
             note.position.head_sha,
           );
-          
+
           const fullContent = Buffer.from(fileContent.content, 'base64').toString('utf-8');
           const lines = fullContent.split('\n');
           const lineNum = note.position.new_line || note.position.old_line;
@@ -1314,11 +1467,12 @@ export class WebhookService {
         }
       }
 
-      return {
+      const gitlabCommentData = {
         projectId: project.id,
         pullRequestId: mergeRequest.iid.toString(),
         pullRequestNumber: mergeRequest.iid,
         commentId: note.id.toString(),
+        discussionId: note.discussion_id || null, // GitLab discussion ID for threading
         content: note.note,
         filePath: note.position?.new_path || note.position?.old_path || null,
         lineNumber: note.position?.new_line || note.position?.old_line || null,
@@ -1326,10 +1480,21 @@ export class WebhookService {
         author: payload.user.username,
         parentCommentId,
         isReplyToAi,
+        isBotComment,
         codeSnippet,
         aiComment,
         commitId: note.commit_id,
       };
+
+      this.logger.log(`📊 Extracted GitLab comment data:`);
+      this.logger.log(`   Comment ID: ${gitlabCommentData.commentId}`);
+      this.logger.log(`   Discussion ID: ${gitlabCommentData.discussionId || 'none'}`);
+      this.logger.log(`   Parent ID: ${gitlabCommentData.parentCommentId || 'none'}`);
+      this.logger.log(`   Is inline comment: ${isInlineComment}`);
+      this.logger.log(`   File: ${gitlabCommentData.filePath || 'N/A'}`);
+      this.logger.log(`   Line: ${gitlabCommentData.lineNumber || 'N/A'}`);
+
+      return gitlabCommentData;
     }
   }
 
@@ -1395,7 +1560,7 @@ export class WebhookService {
     securityIssues: any[] = [],
   ): string {
     const totalFiles = filesWithIssues.length + filesWithoutIssues.length;
-    
+
     // Collect all comments from all files
     const allComments = filesWithIssues.reduce((acc, file) => {
       return [...acc, ...file.reviewResult.lineComments];
@@ -1410,7 +1575,7 @@ export class WebhookService {
     let summary = `## 🤖 AI Code Review Summary\n\n`;
     summary += `**Pull Request:** ${prData.title}\n`;
     summary += `**Files Reviewed:** ${totalFiles}\n`;
-    
+
     // Add security scan results
     if (securityIssues.length > 0) {
       const criticalSec = securityIssues.filter(i => i.severity === 'critical').length;
@@ -1426,7 +1591,7 @@ export class WebhookService {
       // All files are clean
       summary += `### ✅ All Clear!\n\n`;
       summary += `No issues found in any of the reviewed files. Great work! 🎉\n\n`;
-      
+
       if (filesWithoutIssues.length > 0) {
         summary += `**Clean files:**\n`;
         filesWithoutIssues.forEach(file => {
@@ -1455,11 +1620,11 @@ export class WebhookService {
         const fileComments = file.reviewResult.lineComments;
         const fileErrors = fileComments.filter(c => c.severity === 'error').length;
         const fileWarnings = fileComments.filter(c => c.severity === 'warning').length;
-        
+
         let statusIcon = '💡';
         if (fileErrors > 0) statusIcon = '🐛';
         else if (fileWarnings > 0) statusIcon = '⚠️';
-        
+
         summary += `${statusIcon} **\`${file.filename}\`** - ${fileComments.length} issue${fileComments.length > 1 ? 's' : ''} `;
         if (fileErrors > 0) summary += `(${fileErrors} error${fileErrors > 1 ? 's' : ''})`;
         summary += `\n`;
@@ -1484,7 +1649,7 @@ export class WebhookService {
       summary += `### 🚨 Critical Issues\n\n`;
       errors.slice(0, 5).forEach((error, idx) => {
         // Find which file this error belongs to
-        const fileWithError = filesWithIssues.find(f => 
+        const fileWithError = filesWithIssues.find(f =>
           f.reviewResult.lineComments.some(c => c === error)
         );
         summary += `${idx + 1}. **\`${fileWithError?.filename || 'unknown'}\`** (Line ${error.line}): ${error.issue}\n`;
@@ -1525,7 +1690,7 @@ export class WebhookService {
     };
 
     report += `**Total Security Issues Found:** ${securityIssues.length}\n\n`;
-    
+
     if (bySeverity.critical.length > 0) {
       report += `### 🔴 Critical Issues (${bySeverity.critical.length})\n\n`;
       bySeverity.critical.forEach((issue, idx) => {
@@ -1638,13 +1803,13 @@ export class WebhookService {
     try {
       const url = new URL(repositoryUrl);
       const hostname = url.hostname;
-      
+
       // If it's gitlab.com, return undefined (use default)
       if (hostname === 'gitlab.com') {
         this.logger.debug('Using default GitLab host (gitlab.com)');
         return undefined;
       }
-      
+
       // For self-hosted GitLab, return the full base URL
       const host = `${url.protocol}//${hostname}${url.port ? ':' + url.port : ''}`;
       this.logger.log(`Detected self-hosted GitLab: ${host}`);
