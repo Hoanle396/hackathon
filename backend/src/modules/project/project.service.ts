@@ -8,7 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Project } from './project.entity';
 import { TeamMember, InvitationStatus } from '../team/team-member.entity';
-import { Subscription } from '../subscription/subscription.entity';
+import { Subscription, SubscriptionStatus } from '../subscription/subscription.entity';
 import { CreateProjectDto, UpdateProjectDto } from './dto/project.dto';
 
 @Injectable()
@@ -41,16 +41,26 @@ export class ProjectService {
       where: { teamId: createProjectDto.teamId },
     });
 
-    if (subscription && subscription.maxProjects !== -1) {
-      // Count existing projects for this team
-      const projectCount = await this.projectRepository.count({
-        where: { teamId: createProjectDto.teamId },
-      });
-
-      if (projectCount >= subscription.maxProjects) {
+    if (subscription) {
+      // Check if subscription is active before allowing project creation
+      if (subscription.status !== SubscriptionStatus.ACTIVE) {
         throw new BadRequestException(
-          `Project limit reached (${subscription.maxProjects}). Please upgrade your subscription plan.`
+          `Your subscription is ${subscription.status}. Please complete payment to activate your subscription.`
         );
+      }
+
+      // Check project limit
+      if (subscription.maxProjects !== -1) {
+        // Count existing projects for this team
+        const projectCount = await this.projectRepository.count({
+          where: { teamId: createProjectDto.teamId },
+        });
+
+        if (projectCount >= subscription.maxProjects) {
+          throw new BadRequestException(
+            `Project limit reached (${subscription.maxProjects}). Please upgrade your subscription plan.`
+          );
+        }
       }
     }
 

@@ -58,36 +58,39 @@ export class SubscriptionService {
       return await this.update(existing.id, createSubscriptionDto);
     }
 
-    const planDetails = PLAN_PRICING[createSubscriptionDto.plan];
-
     const now = new Date();
     const periodEnd = new Date(now);
     periodEnd.setMonth(periodEnd.getMonth() + 1);
 
+    // For paid plans, start with FREE and store the requested plan as pending
+    const isFreePlan = createSubscriptionDto.plan === SubscriptionPlan.FREE;
+    const actualPlan = isFreePlan ? SubscriptionPlan.FREE : SubscriptionPlan.FREE;
+    const planDetails = PLAN_PRICING[actualPlan];
+
     const subscription = this.subscriptionRepository.create({
       ...createSubscriptionDto,
       userId: createSubscriptionDto.teamId ? null : userId,
+      plan: actualPlan,
+      pendingPlan: isFreePlan ? null : createSubscriptionDto.plan,
       price: planDetails.price,
       maxProjects: planDetails.maxProjects,
       maxMembers: planDetails.maxMembers,
       monthlyReviewLimit: planDetails.monthlyReviewLimit,
       currentPeriodStart: now,
       currentPeriodEnd: periodEnd,
-      status: createSubscriptionDto.plan === SubscriptionPlan.FREE
-        ? SubscriptionStatus.ACTIVE
-        : SubscriptionStatus.PENDING_PAYMENT,
+      status: SubscriptionStatus.ACTIVE, // Always start as ACTIVE with at least FREE plan
     });
 
     const savedSubscription = await this.subscriptionRepository.save(subscription);
 
-    // Only update team entity if this is a FREE plan (paid plans update after payment)
-    if (createSubscriptionDto.teamId && createSubscriptionDto.plan === SubscriptionPlan.FREE) {
+    // Update team entity with the actual plan (FREE for new subscriptions)
+    if (createSubscriptionDto.teamId) {
       const team = await this.subscriptionRepository.manager.findOne(Team, {
         where: { id: createSubscriptionDto.teamId },
       });
 
       if (team) {
-        team.plan = createSubscriptionDto.plan as any;
+        team.plan = actualPlan as any;
         team.maxProjects = planDetails.maxProjects;
         team.maxMembers = planDetails.maxMembers;
         team.monthlyReviewLimit = planDetails.monthlyReviewLimit;
@@ -180,10 +183,7 @@ export class SubscriptionService {
 
     if (updateSubscriptionDto.plan) {
       const planDetails = PLAN_PRICING[updateSubscriptionDto.plan];
-      subscription.plan = updateSubscriptionDto.plan;
-      subscription.price = planDetails.price;
 
-      // For FREE plan, activate immediately and update limits
       if (updateSubscriptionDto.plan === SubscriptionPlan.FREE) {
         subscription.status = SubscriptionStatus.ACTIVE;
         subscription.maxProjects = planDetails.maxProjects;
@@ -220,9 +220,7 @@ export class SubscriptionService {
           }
         }
       } else {
-        // For paid plans, set to PENDING_PAYMENT until payment is verified
-        // Do NOT update limits or team - this happens in verifyPaymentTransaction()
-        subscription.status = SubscriptionStatus.PENDING_PAYMENT;
+        subscription.pendingPlan = updateSubscriptionDto.plan;
       }
     }
 
@@ -275,6 +273,11 @@ export class SubscriptionService {
     });
 
     if (!subscription) {
+      return false;
+    }
+
+    // Check if subscription is active
+    if (subscription.status !== SubscriptionStatus.ACTIVE) {
       return false;
     }
 
@@ -485,13 +488,16 @@ export class SubscriptionService {
       });
 
       if (subscription) {
-        // Get plan details to update limits
-        const planDetails = PLAN_PRICING[subscription.plan];
+        // Use pendingPlan if exists, otherwise use current plan
+        const targetPlan = subscription.pendingPlan || subscription.plan;
+        const planDetails = PLAN_PRICING[targetPlan];
 
         subscription.status = SubscriptionStatus.ACTIVE;
         subscription.walletAddress = verification.from;
+        subscription.plan = targetPlan; // Now apply the plan upgrade
+        subscription.pendingPlan = null; // Clear pending plan
 
-        // Update plan limits based on the current plan
+        // Update plan limits based on the target plan
         subscription.maxProjects = planDetails.maxProjects;
         subscription.maxMembers = planDetails.maxMembers;
         subscription.monthlyReviewLimit = planDetails.monthlyReviewLimit;

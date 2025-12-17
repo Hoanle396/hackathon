@@ -159,6 +159,17 @@ export class TeamService {
       throw new ForbiddenException('Only team owners and admins can invite members');
     }
 
+    // Check team subscription status
+    const subscription = await this.teamRepository.manager.findOne(Subscription, {
+      where: { teamId },
+    });
+
+    if (subscription && subscription.status !== SubscriptionStatus.ACTIVE) {
+      throw new BadRequestException(
+        `Your team subscription is ${subscription.status}. Please complete payment to activate your subscription.`
+      );
+    }
+
     // Check team member limit
     const memberCount = await this.teamMemberRepository.count({
       where: { teamId, status: InvitationStatus.ACCEPTED },

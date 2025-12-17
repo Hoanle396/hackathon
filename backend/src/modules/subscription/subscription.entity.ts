@@ -34,6 +34,9 @@ export class Subscription {
   @Column({ type: 'enum', enum: SubscriptionPlan, default: SubscriptionPlan.FREE })
   plan: SubscriptionPlan;
 
+  @Column({ type: 'enum', enum: SubscriptionPlan, nullable: true })
+  pendingPlan?: SubscriptionPlan;
+
   @Column({ type: 'enum', enum: SubscriptionStatus, default: SubscriptionStatus.ACTIVE })
   status: SubscriptionStatus;
 
