@@ -285,7 +285,7 @@ export default function InvitationsPage() {
 
                 <CardContent>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                    <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-zinc-800/30 border border-zinc-800">
+                    <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-zinc-800/30 border border-emerald-400/20">
                       <Clock className="h-5 w-5 flex-shrink-0 text-zinc-500" />
                       <span
                         className={cn(
