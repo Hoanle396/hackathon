@@ -88,7 +88,7 @@ export default function DashboardPage() {
 
       {/* Team Filter */}
       {teams.length > 0 && (
-        <div className="flex flex-wrap items-center gap-4 py-2.5 px-4 rounded-md bg-zinc-900/50 border border-zinc-800/50 backdrop-blur-sm">
+        <div className="flex flex-wrap items-center gap-4 py-2.5 px-4 rounded-md bg-zinc-900/50 border border-emerald-400/20 backdrop-blur-sm">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-zinc-800/50">
               <Users className="h-4 w-4 text-zinc-400" />
@@ -148,7 +148,7 @@ export default function DashboardPage() {
         /* Empty State */
         <div className="grid lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2">
-            <Card className="bg-zinc-900/50 border-zinc-800 backdrop-blur-sm h-full shadow-2xl">
+            <Card className="bg-zinc-900/50 border-emerald-400/20 backdrop-blur-sm h-full shadow-2xl">
               <CardContent className="flex flex-col items-center justify-center py-24 space-y-8">
                 <div className="relative">
                   <div className="w-20 h-20 rounded-full bg-zinc-800 flex items-center justify-center text-4xl shadow-2xl ring-4 ring-zinc-800/50 ring-offset-4 ring-offset-black">
@@ -184,7 +184,7 @@ export default function DashboardPage() {
           {projects.map((project, index) => (
             <Card
               key={project.id}
-              className="group bg-zinc-900/70 border-zinc-800 hover:border-emerald-400/40 backdrop-blur-sm hover:shadow-2xl hover:shadow-emerald-500/20 hover:-translate-y-2 transition-all duration-300 overflow-hidden"
+              className="group bg-zinc-900/70 border-emerald-400/20 hover:border-emerald-400/50 backdrop-blur-sm hover:shadow-2xl hover:shadow-emerald-500/20 hover:-translate-y-2 transition-all duration-300 overflow-hidden"
               style={{ animationDelay: `${index * 70}ms` }}
             >
               <CardHeader className="py-2">
@@ -218,7 +218,7 @@ export default function DashboardPage() {
 
               <CardContent className="space-y-2">
                 {project.team && (
-                  <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-zinc-800/30 border border-zinc-800 group-hover:border-zinc-700 transition-colors">
+                  <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-zinc-800/30 border border-emerald-400/20 group-hover:border-emerald-400/30 transition-colors">
                     <div className="p-1.5 rounded-md bg-zinc-800">
                       <Users className="h-3.5 w-3.5 text-zinc-400" />
                     </div>
@@ -228,7 +228,7 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-zinc-800/20 border border-zinc-800/50 group-hover:border-zinc-700/50 transition-colors">
+                <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-zinc-800/20 border border-emerald-400/20 group-hover:border-emerald-400/30 transition-colors">
                   <GitBranch className="h-4 w-4 flex-shrink-0 text-zinc-500" />
                   <span className="text-sm truncate font-medium text-zinc-400 group-hover:text-zinc-300 transition-colors">
                     {project.repositoryUrl}
@@ -276,7 +276,7 @@ export default function DashboardPage() {
                 </div>
 
                 {project.businessContext && (
-                  <div className="pt-4 mt-4 border-t border-zinc-800/50">
+                  <div className="pt-4 mt-4 border-t border-emerald-400/20">
                     <p className="text-zinc-400 text-sm leading-relaxed line-clamp-3 group-hover:text-zinc-300 transition-colors">
                       {project.businessContext}
                     </p>

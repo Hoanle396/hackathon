@@ -140,12 +140,12 @@ export default function DashboardLayout({
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 h-full bg-zinc-950 border-r border-zinc-800 transition-all duration-300 z-50 flex flex-col",
+          "fixed left-0 top-0 h-full bg-zinc-950 border-r border-emerald-400/20 transition-all duration-300 z-50 flex flex-col",
           collapsed ? "w-16" : "w-64"
         )}
       >
         {/* Logo & Toggle */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-zinc-800">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-emerald-400/20">
           <Link href="/dashboard" className="flex items-center justify-center">
             <img
               src="/logo-horizontal.svg"
@@ -205,14 +205,14 @@ export default function DashboardLayout({
         </nav>
 
         {/* User Profile */}
-        <div className="border-t border-zinc-800 p-3">
+        <div className="border-t border-emerald-400/20 p-3">
           <div
             className={cn(
-              "flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-900 transition-colors",
+              "flex items-center gap-3 p-2 rounded-lg border border-emerald-400/20 hover:border-emerald-400/40 hover:bg-zinc-900/50 transition-all duration-300",
               collapsed && "justify-center"
             )}
           >
-            <Avatar className="h-9 w-9 ring-2 ring-zinc-700">
+            <Avatar className="h-9 w-9 ring-2 ring-emerald-400/30">
               <AvatarFallback className="bg-gradient-to-br from-zinc-600 to-zinc-800 text-white font-semibold text-sm">
                 {user?.fullName?.charAt(0).toUpperCase() ||
                   user?.email.charAt(0).toUpperCase()}
