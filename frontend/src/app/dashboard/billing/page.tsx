@@ -586,10 +586,10 @@ export default function BillingPage() {
             <div className="flex items-center gap-3">
               <CreditCard className="h-6 w-6 text-zinc-400" />
               <div>
-                <CardTitle className="text-2xl text-white">
+                <CardTitle className="text-xl font-bold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
                   Current Plan
                   {selectedContext !== "personal" && teams.length > 0 && (
-                    <span className="text-base font-normal text-zinc-400 ml-3">
+                    <span className="text-sm font-normal text-zinc-400 ml-3">
                       ({teams.find((t) => t.id === selectedContext)?.name})
                     </span>
                   )}
@@ -613,53 +613,58 @@ export default function BillingPage() {
             )}
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
           {subscription ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-1">
-                  <p className="text-zinc-500 text-sm">Plan</p>
-                  <p className="text-3xl font-bold text-white capitalize">
+            <div className="flex flex-col gap-2">
+              {/* Subscription Stats Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 rounded-lg bg-zinc-800/30 border border-zinc-700/50 hover:border-emerald-400/30 transition-all">
+                  <p className="text-zinc-500 text-xs uppercase tracking-wide mb-2">Plan</p>
+                  <p className="text-2xl font-bold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent capitalize">
                     {subscription.plan}
                   </p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-zinc-500 text-sm">Monthly Price</p>
-                  <p className="text-3xl font-bold text-white">
+                <div className="p-4 rounded-lg bg-zinc-800/30 border border-zinc-700/50 hover:border-emerald-400/30 transition-all">
+                  <p className="text-zinc-500 text-xs uppercase tracking-wide mb-2">Monthly Price</p>
+                  <p className="text-2xl font-bold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
                     ${subscription.price} USDT
                   </p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-zinc-500 text-sm">Billing Period</p>
-                  <p className="text-2xl font-semibold text-white capitalize">
+                <div className="p-4 rounded-lg bg-zinc-800/30 border border-zinc-700/50 hover:border-emerald-400/30 transition-all">
+                  <p className="text-zinc-500 text-xs uppercase tracking-wide mb-2">Billing Period</p>
+                  <p className="text-xl font-semibold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent capitalize">
                     {subscription.billingCycle}
                   </p>
                 </div>
               </div>
 
-              {subscription.walletAddress && (
-                <div className="flex items-center gap-2 text-zinc-400">
-                  <Wallet className="h-5 w-5" />
+              {/* Additional Info */}
+              <div className="pt-4 border-t border-zinc-800/50 space-y-3">
+                {subscription.walletAddress && (
+                  <div className="flex items-center gap-2 text-sm text-zinc-400">
+                    <Wallet className="h-4 w-4 text-emerald-400" />
+                    <span>
+                      Paid from: {formatAddress(subscription.walletAddress)}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2 text-sm text-zinc-400">
+                  <Calendar className="h-4 w-4 text-emerald-400" />
                   <span>
-                    Paid from: {formatAddress(subscription.walletAddress)}
+                    {new Date(
+                      subscription.currentPeriodStart
+                    ).toLocaleDateString()}{" "}
+                    →{" "}
+                    {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
                   </span>
                 </div>
-              )}
-
-              <div className="flex items-center gap-2 text-zinc-400">
-                <Calendar className="h-5 w-5" />
-                <span>
-                  {new Date(
-                    subscription.currentPeriodStart
-                  ).toLocaleDateString()}{" "}
-                  →{" "}
-                  {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
-                </span>
               </div>
 
-              <div className="flex flex-wrap gap-3 pt-4">
-                {isConnected && subscription.plan === "free" && (
-                  <>
+              {/* Upgrade Buttons */}
+              <div className="pt-4 border-t flex items-center gap-2 border-zinc-800/50">
+                {isConnected && subscription && subscription.plan === "free" && (
+                  <div className="flex items-center gap-2">
                     <Button
                       onClick={() => handleUpgrade("starter")}
                       disabled={!!processingStep}
@@ -684,10 +689,10 @@ export default function BillingPage() {
                       <ArrowUpRight className="h-5 w-5 mr-2" />
                       Upgrade to Enterprise - $299/mo
                     </Button>
-                  </>
+                  </div>
                 )}
-                {isConnected && subscription.plan === "starter" && (
-                  <>
+                {isConnected && subscription && subscription.plan === "starter" && (
+                  <div className="flex items-center gap-2">
                     <Button
                       onClick={() => handleUpgrade("professional")}
                       disabled={!!processingStep}
@@ -704,9 +709,9 @@ export default function BillingPage() {
                       <ArrowUpRight className="h-5 w-5 mr-2" />
                       Upgrade to Enterprise - $299/mo
                     </Button>
-                  </>
+                  </div>
                 )}
-                {isConnected && subscription.plan === "professional" && (
+                {isConnected && subscription && subscription.plan === "professional" && (
                   <Button
                     onClick={() => handleUpgrade("enterprise")}
                     disabled={!!processingStep}
@@ -716,7 +721,7 @@ export default function BillingPage() {
                     Upgrade to Enterprise - $299/mo
                   </Button>
                 )}
-                {subscription.status === "active" &&
+                {subscription && subscription.status === "active" &&
                   subscription.plan !== "free" && (
                     <Button
                       variant="destructive"
@@ -726,16 +731,16 @@ export default function BillingPage() {
                     </Button>
                   )}
               </div>
-            </>
+            </div>
           ) : (
-            <div className="text-center py-12 space-y-6">
-              <div className="w-20 h-20 mx-auto rounded-full bg-zinc-800 flex items-center justify-center">
-                <CreditCard className="h-10 w-10 text-zinc-600" />
+            <div className="text-center py-16 space-y-4">
+              <div className="w-16 h-16 mx-auto rounded-full bg-zinc-800/50 flex items-center justify-center ring-2 ring-zinc-700">
+                <CreditCard className="h-8 w-8 text-zinc-600" />
               </div>
-              <h3 className="text-2xl font-semibold text-white">
+              <h3 className="text-xl font-semibold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
                 No Active Subscription
               </h3>
-              <p className="text-zinc-400 max-w-md mx-auto">
+              <p className="text-zinc-400 text-sm max-w-md mx-auto">
                 You're currently on the Free plan. Upgrade to unlock more
                 features.
               </p>
@@ -752,48 +757,50 @@ export default function BillingPage() {
       </Card>
 
       {/* Usage Statistics */}
-      {usage && subscription && (
-        <Card className="bg-zinc-900/50 backdrop-blur-sm border-zinc-800">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3">
-              <TrendingUp className="h-6 w-6 text-zinc-400" />
-              Monthly Usage
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-zinc-300 font-medium">
-                  AI Code Reviews This Month
-                </span>
-                <span className="text-xl font-bold text-white">
-                  {usage.currentMonthReviews} /{" "}
-                  {usage.monthlyReviewLimit === -1
-                    ? "Unlimited"
-                    : usage.monthlyReviewLimit}
-                </span>
+      {
+        usage && subscription && (
+          <Card className="bg-zinc-900/50 backdrop-blur-sm border-zinc-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-lg font-bold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
+                <TrendingUp className="h-5 w-5 text-emerald-400" />
+                Monthly Usage
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-zinc-300 font-medium">
+                    AI Code Reviews This Month
+                  </span>
+                  <span className="text-lg font-bold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
+                    {usage.currentMonthReviews} /{" "}
+                    {usage.monthlyReviewLimit === -1
+                      ? "Unlimited"
+                      : usage.monthlyReviewLimit}
+                  </span>
+                </div>
+                <Progress value={usage.usagePercentage} className="h-4" />
+                {usage.usagePercentage >= 80 &&
+                  usage.monthlyReviewLimit !== -1 && (
+                    <div className="flex items-center gap-2 mt-4 text-orange-400">
+                      <AlertCircle className="h-5 w-5" />
+                      <span>
+                        You're using {usage.usagePercentage.toFixed(0)}% of your
+                        monthly limit. Consider upgrading!
+                      </span>
+                    </div>
+                  )}
               </div>
-              <Progress value={usage.usagePercentage} className="h-4" />
-              {usage.usagePercentage >= 80 &&
-                usage.monthlyReviewLimit !== -1 && (
-                  <div className="flex items-center gap-2 mt-4 text-orange-400">
-                    <AlertCircle className="h-5 w-5" />
-                    <span>
-                      You're using {usage.usagePercentage.toFixed(0)}% of your
-                      monthly limit. Consider upgrading!
-                    </span>
-                  </div>
-                )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
+        )
+      }
 
       {/* Payment History */}
       <Card className="bg-zinc-900/50 backdrop-blur-sm border-zinc-800">
         <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            <DollarSign className="h-6 w-6 text-zinc-400" />
+          <CardTitle className="flex items-center gap-3 text-lg font-bold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
+            <DollarSign className="h-5 w-5 text-emerald-400" />
             Payment History
           </CardTitle>
           <CardDescription className="text-zinc-400">
@@ -834,7 +841,7 @@ export default function BillingPage() {
                     </div>
                     <div>
                       <div className="flex items-center gap-3">
-                        <p className="text-xl font-semibold text-white">
+                        <p className="text-lg font-semibold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
                           {payment.amount} {payment.currency}
                         </p>
                         <Badge
