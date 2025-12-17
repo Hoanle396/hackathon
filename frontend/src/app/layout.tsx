@@ -8,8 +8,13 @@ import Providers from "./providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AI Code Reviewer",
-  description: "Intelligent code review system powered by AI",
+  title: "Nexus Code - Intelligent Code Review Platform",
+  description: "Nexus Code: AI-powered code review platform with team collaboration, business context awareness, and Web3 payment. Supports GitHub, GitLab, and Discord integration.",
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/logo.svg',
+  },
 };
 
 export default function RootLayout({

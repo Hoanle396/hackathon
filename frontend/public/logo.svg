@@ -1,0 +1,128 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Green Gradient -->
+    <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#34D399;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#34D399;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6EE7B7;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Glow Effects -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <filter id="strongGlow">
+      <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+      <feFlood flood-color="#10B981" flood-opacity="0.4"/>
+      <feComposite in2="coloredBlur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <circle cx="100" cy="100" r="90" fill="#0a0a0a" opacity="0.5"/>
+  
+  <!-- NEXUS - Central Hub Design -->
+  <g transform="translate(100, 100)">
+    
+    <!-- Outer Ring -->
+    <circle cx="0" cy="0" r="70" 
+            stroke="url(#greenGrad)" 
+            stroke-width="2" 
+            fill="none" 
+            opacity="0.3" 
+            stroke-dasharray="8 6">
+      <animateTransform
+        attributeName="transform"
+        attributeType="XML"
+        type="rotate"
+        from="0 0 0"
+        to="360 0 0"
+        dur="30s"
+        repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- Central Hexagon (Core) -->
+    <g filter="url(#strongGlow)">
+      <path d="M 0,-28 L 24,-14 L 24,14 L 0,28 L -24,14 L -24,-14 Z" 
+            fill="#0a0a0a" 
+            stroke="url(#greenGrad)" 
+            stroke-width="3"/>
+    </g>
+    
+    <!-- Inner Core Glow -->
+    <circle cx="0" cy="0" r="10" fill="url(#emeraldGrad)" opacity="0.8" filter="url(#glow)"/>
+    
+    <!-- 6 Connection Lines -->
+    <g opacity="0.8" stroke-width="2.5" stroke-linecap="round">
+      <!-- Top -->
+      <line x1="0" y1="-28" x2="0" y2="-58" stroke="url(#greenGrad)"/>
+      <!-- Bottom -->
+      <line x1="0" y1="28" x2="0" y2="58" stroke="url(#greenGrad)"/>
+      <!-- Top-Right -->
+      <line x1="24" y1="-14" x2="50" y2="-29" stroke="url(#emeraldGrad)"/>
+      <!-- Top-Left -->
+      <line x1="-24" y1="-14" x2="-50" y2="-29" stroke="url(#emeraldGrad)"/>
+      <!-- Bottom-Right -->
+      <line x1="24" y1="14" x2="50" y2="29" stroke="url(#greenGrad)"/>
+      <!-- Bottom-Left -->
+      <line x1="-24" y1="14" x2="-50" y2="29" stroke="url(#greenGrad)"/>
+    </g>
+    
+    <!-- 6 Outer Nodes -->
+    <g>
+      <circle cx="0" cy="-58" r="8" fill="url(#greenGrad)" stroke="#10B981" stroke-width="2"/>
+      <circle cx="0" cy="58" r="8" fill="url(#greenGrad)" stroke="#10B981" stroke-width="2"/>
+      <circle cx="50" cy="-29" r="8" fill="url(#emeraldGrad)" stroke="#34D399" stroke-width="2"/>
+      <circle cx="-50" cy="-29" r="8" fill="url(#emeraldGrad)" stroke="#34D399" stroke-width="2"/>
+      <circle cx="50" cy="29" r="8" fill="url(#greenGrad)" stroke="#10B981" stroke-width="2"/>
+      <circle cx="-50" cy="29" r="8" fill="url(#greenGrad)" stroke="#10B981" stroke-width="2"/>
+    </g>
+    
+    <!-- Code Brackets (Emerald) -->
+    <g stroke="#10B981" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.9">
+      <path d="M -65,-12 L -70,-8 L -70,8 L -65,12"/>
+      <path d="M 65,-12 L 70,-8 L 70,8 L 65,12"/>
+    </g>
+    
+    <!-- Animated Data Flow Particles -->
+    <g opacity="0.7">
+      <!-- Particle 1 -->
+      <circle cx="0" cy="-40" r="3" fill="#10B981">
+        <animate attributeName="cy" values="-40;-50;-40" dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+      </circle>
+      
+      <!-- Particle 2 -->
+      <circle cx="35" cy="20" r="3" fill="#34D399">
+        <animate attributeName="cx" values="35;42;35" dur="2.5s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.7;1;0.7" dur="2.5s" repeatCount="indefinite"/>
+      </circle>
+      
+      <!-- Particle 3 -->
+      <circle cx="-35" cy="-20" r="3" fill="#6EE7B7">
+        <animate attributeName="cx" values="-35;-42;-35" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.7;1;0.7" dur="3s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+    
+  </g>
+  
+  <!-- Decorative Corner Dots -->
+  <circle cx="100" cy="12" r="4" fill="#10B981" opacity="0.6"/>
+  <circle cx="188" cy="100" r="4" fill="#34D399" opacity="0.6"/>
+  <circle cx="100" cy="188" r="4" fill="#10B981" opacity="0.6"/>
+  <circle cx="12" cy="100" r="4" fill="#34D399" opacity="0.6"/>
+</svg>

@@ -1,10 +1,14 @@
-# 🤖 AI Code Reviewer - Intelligent Code Review Platform
-
 <div align="center">
 
-![AI Code Reviewer](https://img.shields.io/badge/AI-Code%20Reviewer-blue?style=for-the-badge)
-![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
-![Version](https://img.shields.io/badge/version-1.0.0-orange?style=for-the-badge)
+<img src="./frontend/public/logo-horizontal.svg" alt="Nexus Code Logo" width="500"/>
+
+<br/><br/>
+
+![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
+![Version](https://img.shields.io/badge/version-1.0.0-blue?style=flat-square)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)
+![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)
+![NestJS](https://img.shields.io/badge/NestJS-10-red?style=flat-square&logo=nestjs)
 
 **AI-Powered Code Review Platform with Team Collaboration & Web3 Payment**
 
@@ -16,7 +20,7 @@
 
 ## 📖 Tổng quan
 
-**AI Code Reviewer** là nền tảng SaaS thông minh giúp tự động hóa code review bằng AI, kết hợp khả năng học từ feedback và hiểu business context. Nền tảng hỗ trợ team collaboration, subscription management, và payment qua Web3 USDC.
+**Nexus Code** là nền tảng SaaS thông minh giúp tự động hóa code review bằng AI, kết hợp khả năng học từ feedback và hiểu business context. Nền tảng hỗ trợ team collaboration, subscription management, và payment qua Web3 USDC.
 
 ### 🎯 Problem Statement
 
@@ -24,7 +28,7 @@ Code review thủ công tốn **2-4 giờ/ngày** cho mỗi senior developer. Ch
 
 ### 💡 Solution
 
-AI Code Reviewer cung cấp:
+Nexus Code cung cấp:
 - ✅ AI reviewer 24/7 với khả năng hiểu business context
 - ✅ Học từ team feedback để cải thiện liên tục
 - ✅ Team collaboration với role-based permissions
@@ -673,7 +677,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Team
 
-**AI Code Reviewer Team**
+**Nexus Code Team**
 - Product & Development
 - Based in Vietnam 🇻🇳
 - Building the future of code review
@@ -693,23 +697,23 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- 📧 Email: support@aicodereview.dev
-- 💬 Discord: [Join our community](https://discord.gg/aicodereview)
-- 📚 Docs: [docs.aicodereview.dev](https://docs.aicodereview.dev)
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/ai-code-reviewer/issues)
+- 📧 Email: support@nexuscode.dev
+- 💬 Discord: [Join our community](https://discord.gg/nexuscode)
+- 📚 Docs: [docs.nexuscode.dev](https://docs.nexuscode.dev)
+- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/nexus-code/issues)
 
 ---
 
 ## 🌟 Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/ai-code-reviewer&type=Date)](https://star-history.com/#yourusername/ai-code-reviewer&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/nexus-code&type=Date)](https://star-history.com/#yourusername/nexus-code&Date)
 
 ---
 
 <div align="center">
 
-**Made with ❤️ by AI Code Reviewer Team**
+**Made with ❤️ by Nexus Code Team**
 
-[Website](https://aicodereview.dev) • [Twitter](https://twitter.com/aicodereview) • [LinkedIn](https://linkedin.com/company/aicodereview)
+[Website](https://nexuscode.dev) • [Twitter](https://twitter.com/nexuscode) • [LinkedIn](https://linkedin.com/company/nexuscode)
 
 </div>

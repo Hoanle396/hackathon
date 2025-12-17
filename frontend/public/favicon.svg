@@ -1,0 +1,44 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="favGradGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#34D399;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="32" height="32" rx="6" fill="#0a0a0a"/>
+  
+  <!-- Nexus Hub Icon -->
+  <g transform="translate(16, 16)">
+    
+    <!-- Central Hexagon -->
+    <path d="M 0,-7 L 6,-3.5 L 6,3.5 L 0,7 L -6,3.5 L -6,-3.5 Z" 
+          fill="url(#favGradGreen)" 
+          opacity="0.9"/>
+    
+    <!-- Inner Core -->
+    <circle cx="0" cy="0" r="2.5" fill="#6EE7B7"/>
+    
+    <!-- Connection Lines -->
+    <g stroke="#10B981" stroke-width="1.5" opacity="0.8">
+      <line x1="0" y1="-7" x2="0" y2="-12"/>
+      <line x1="0" y1="7" x2="0" y2="12"/>
+      <line x1="6" y1="-3.5" x2="10" y2="-6"/>
+      <line x1="-6" y1="-3.5" x2="-10" y2="-6"/>
+      <line x1="6" y1="3.5" x2="10" y2="6"/>
+      <line x1="-6" y1="3.5" x2="-10" y2="6"/>
+    </g>
+    
+    <!-- Outer Nodes -->
+    <g fill="#34D399">
+      <circle cx="0" cy="-12" r="2.5"/>
+      <circle cx="0" cy="12" r="2.5"/>
+      <circle cx="10" cy="-6" r="2.5"/>
+      <circle cx="-10" cy="-6" r="2.5"/>
+      <circle cx="10" cy="6" r="2.5"/>
+      <circle cx="-10" cy="6" r="2.5"/>
+    </g>
+    
+  </g>
+</svg>

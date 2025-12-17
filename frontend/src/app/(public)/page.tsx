@@ -7,6 +7,7 @@ import { CheckCircle, Sparkles, ShieldCheck, GitBranch, Github, GitlabIcon as Gi
 import { EncryptedText } from "@/components/ui/encrypted-text";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { CometCard } from "@/components/ui/comet-card";
+import Footer from "@/components/layout/footer";
 
 export default function LandingPage() {
   return (
@@ -35,7 +36,7 @@ export default function LandingPage() {
             bg-clip-text text-transparent
           "
         >
-          <EncryptedText text="AI Code Reviewer for Modern Development" />
+          <EncryptedText text="Nexus Code for Modern Development" />
         </motion.h1>
 
         <motion.p
@@ -463,27 +464,7 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      <footer className="py-10 border-t border-zinc-800">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">✨</span>
-              <span className="text-xl font-bold text-emerald-400">AI Code Reviewer</span>
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-6 text-zinc-500">
-              <Link href="/pricing" className="hover:text-emerald-300 transition-all duration-300">Pricing</Link>
-              <Link href="/docs" className="hover:text-emerald-300 transition-all duration-300">Docs</Link>
-              <Link href="/blog" className="hover:text-emerald-300 transition-all duration-300">Blog</Link>
-              <Link href="/contact" className="hover:text-emerald-300 transition-all duration-300">Contact</Link>
-            </div>
-
-            <div className="text-zinc-500 text-sm">
-              © {new Date().getFullYear()} AI Code Reviewer
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

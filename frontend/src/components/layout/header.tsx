@@ -17,12 +17,14 @@ const Header = () => {
   return (
     <nav className="sticky top-0 z-50 backdrop-blur-md bg-black border-b border-zinc-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link href="/" className="text-xl font-bold">
-            <span className="bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
-              AI Code Reviewer
-            </span>
+          <Link href="/" className="flex items-center group">
+            <img
+              src="/logo-horizontal.svg"
+              alt="Logo"
+              className="h-12 transition-transform group-hover:scale-105"
+            />
           </Link>
 
           {/* Desktop Navigation */}
@@ -34,7 +36,7 @@ const Header = () => {
                 className={cn(
                   "relative text-zinc-300 transition hover:text-white group",
                   item.highlight &&
-                    "text-black bg-white px-4 py-2 rounded-md font-medium hover:bg-zinc-200 shadow-md"
+                  "text-black bg-white px-4 py-2 rounded-md font-medium hover:bg-zinc-200 shadow-md"
                 )}
               >
                 {!item.highlight && (
@@ -75,7 +77,7 @@ const Header = () => {
               className={cn(
                 "block text-center py-3 rounded-lg text-zinc-300 hover:text-white transition",
                 item.highlight &&
-                  "bg-white text-black font-semibold hover:bg-zinc-200 shadow"
+                "bg-white text-black font-semibold hover:bg-zinc-200 shadow"
               )}
             >
               {item.label}

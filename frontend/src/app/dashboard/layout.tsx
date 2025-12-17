@@ -146,13 +146,13 @@ export default function DashboardLayout({
       >
         {/* Logo & Toggle */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-zinc-800">
-          {!collapsed && (
-            <Link href="/dashboard">
-              <div className="text-xl font-bold text-white cursor-pointer">
-                AI Code Reviewer
-              </div>
-            </Link>
-          )}
+          <Link href="/dashboard" className="flex items-center justify-center">
+            <img
+              src="/logo-horizontal.svg"
+              alt="Logo"
+              className="h-15 transition-transform"
+            />
+          </Link>
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="p-2 rounded-lg hover:bg-zinc-900 transition-colors"
