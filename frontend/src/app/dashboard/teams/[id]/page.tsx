@@ -671,7 +671,11 @@ export default function TeamDetailPage() {
               disabled={deleting}
               className="flex-1 bg-red-600 hover:bg-red-700"
             >
-              {deleting ? "Deleting..." : "Delete"}
+              {deleting ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                "Delete"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

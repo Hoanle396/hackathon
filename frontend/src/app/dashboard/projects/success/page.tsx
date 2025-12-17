@@ -92,7 +92,7 @@ export default function ProjectSuccessPage() {
                       <WebhookSetupGuide
                         trigger={
                           <Button
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                            className="bg-emerald-400 text-black hover:bg-emerald-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 transition-all duration-300 hover:scale-[1.02]"
                             size="sm"
                           >
                             <BookOpen className="h-4 w-4 mr-2" />
@@ -172,7 +172,7 @@ export default function ProjectSuccessPage() {
                 onClick={() => router.push(`/dashboard/projects/${projectId}`)}
                 disabled={!projectId}
                 className={cn(
-                  "flex-1 bg-gradient-to-r from-white to-zinc-400 text-black font-semibold shadow-lg hover:shadow-xl hover:from-zinc-200 hover:to-zinc-500 transition-all duration-300"
+                  "flex-1 bg-emerald-400 text-black hover:bg-emerald-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 transition-all duration-300 font-semibold hover:scale-[1.02]"
                 )}
               >
                 View Project Details

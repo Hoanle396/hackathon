@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Plus, BookOpen } from "lucide-react";
+import { ArrowLeft, Plus, BookOpen, Loader2 } from "lucide-react";
 import { projectService, CreateProjectData } from "@/services/project.service";
 import { cn } from "@/lib/utils";
 import { WebhookSetupGuide } from "@/components/webhook-setup-guide";
@@ -413,8 +413,14 @@ export default function NewProjectPage() {
                   loading && "opacity-60 cursor-not-allowed"
                 )}
               >
-                <Plus className="h-5 w-5 mr-2" />
-                {loading ? "Creating Project..." : "Create Project"}
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <>
+                    <Plus className="h-5 w-5 mr-2" />
+                    Create Project
+                  </>
+                )}
               </Button>
 
               <Button

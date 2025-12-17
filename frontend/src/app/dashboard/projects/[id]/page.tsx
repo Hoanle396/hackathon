@@ -24,7 +24,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ArrowLeft, Trash2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Trash2, AlertCircle, Loader2 } from "lucide-react";
 import {
   projectService,
   UpdateProjectData,
@@ -373,7 +373,11 @@ export default function EditProjectPage() {
                   loading && "opacity-60 cursor-not-allowed"
                 )}
               >
-                {loading ? "Updating Project..." : "Update Project"}
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  "Update Project"
+                )}
               </Button>
 
               <Button
@@ -456,7 +460,11 @@ export default function EditProjectPage() {
               disabled={deleting}
               className="flex-1 bg-red-600 hover:bg-red-700"
             >
-              {deleting ? "Deleting..." : "Delete"}
+              {deleting ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                "Delete"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

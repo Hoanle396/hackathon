@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "@bprogress/next/app";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
+import { Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ import {
 } from "@/components/ui/card";
 import { authService } from "@/services/auth.service";
 import { BackgroundLines } from "@/components/ui/background-lines";
+import { BackgroundBeamsWithCollision } from "@/components/ui/background-beams-with-collision";
 
 interface RegisterForm {
   email: string;
@@ -56,8 +58,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <BackgroundLines>
-      <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-black via-zinc-950 to-black text-white">
+    <BackgroundBeamsWithCollision>
+      <div className="min-h-[calc(100vh-80px)] w-full flex items-center justify-center px-4 bg-gradient-to-br from-black via-zinc-950 to-black text-white">
         <Card className="w-full max-w-md bg-zinc-900/90 backdrop-blur-xl border border-emerald-400/30 shadow-2xl shadow-emerald-500/20">
           <CardHeader className="text-center">
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
@@ -161,7 +163,11 @@ export default function RegisterPage() {
                 className="w-full bg-emerald-400 text-black font-semibold hover:bg-emerald-300 transition-all duration-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 hover:scale-[1.02]"
                 disabled={loading}
               >
-                {loading ? "Signing up..." : "Sign Up"}
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  "Sign Up"
+                )}
               </Button>
             </form>
 
@@ -178,6 +184,6 @@ export default function RegisterPage() {
           </CardContent>
         </Card>
       </div>
-    </BackgroundLines>
+    </BackgroundBeamsWithCollision>
   );
 }

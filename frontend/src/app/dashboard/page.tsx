@@ -166,7 +166,7 @@ export default function DashboardPage() {
                 </div>
                 <Button
                   onClick={() => router.push("/dashboard/projects/new")}
-                  className="bg-white text-black hover:bg-zinc-200 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold group mt-4"
+                  className="bg-emerald-400 text-black hover:bg-emerald-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 transition-all duration-300 font-semibold group mt-4 hover:scale-[1.02]"
                 >
                   <Plus className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
                   Create Your First Project

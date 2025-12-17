@@ -15,7 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ArrowLeft, Plus, Users } from "lucide-react";
+import { ArrowLeft, Plus, Users, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CreateTeamForm {
@@ -146,8 +146,14 @@ export default function NewTeamPage() {
                   loading && "opacity-60 cursor-not-allowed"
                 )}
               >
-                <Plus className="h-5 w-5 mr-2" />
-                {loading ? "Creating Team..." : "Create Team"}
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <>
+                    <Plus className="h-5 w-5 mr-2" />
+                    Create Team
+                  </>
+                )}
               </Button>
 
               <Button

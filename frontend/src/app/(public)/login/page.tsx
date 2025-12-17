@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
+import { Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ import { authService } from "@/services/auth.service";
 import { useAuthStore } from "@/store/auth";
 import { BackgroundLines } from "@/components/ui/background-lines";
 import { useRouter } from "@bprogress/next/app";
+import { BackgroundBeamsWithCollision } from "@/components/ui/background-beams-with-collision";
 
 interface LoginForm {
   email: string;
@@ -50,8 +52,8 @@ export default function LoginPage() {
   };
 
   return (
-    <BackgroundLines>
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-zinc-950 to-black px-4 text-white">
+    <BackgroundBeamsWithCollision>
+      <div className="min-h-[calc(100vh-80px)] w-full flex items-center justify-center bg-gradient-to-br from-black via-zinc-950 to-black px-4 text-white">
         <Card className="w-full max-w-md bg-zinc-900/90 border border-emerald-400/30 backdrop-blur-xl shadow-2xl shadow-emerald-500/20">
           <CardHeader className="text-center">
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
@@ -109,7 +111,11 @@ export default function LoginPage() {
                 className="w-full bg-emerald-400 text-black font-semibold hover:bg-emerald-300 transition-all duration-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/50 hover:scale-[1.02]"
                 disabled={loading}
               >
-                {loading ? "Logging in..." : "Login"}
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  "Login"
+                )}
               </Button>
             </form>
 
@@ -126,6 +132,6 @@ export default function LoginPage() {
           </CardContent>
         </Card>
       </div>
-    </BackgroundLines>
+    </BackgroundBeamsWithCollision>
   );
 }
