@@ -8,6 +8,7 @@ import { EncryptedText } from "@/components/ui/encrypted-text";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { CometCard } from "@/components/ui/comet-card";
 import Footer from "@/components/layout/footer";
+import { SparklesCore } from "@/components/ui/sparkles";
 
 export default function LandingPage() {
   return (
@@ -117,11 +118,10 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="text-2xl sm:text-3xl md:text-5xl font-bold text-white"
+            className="text-2xl sm:text-3xl md:text-5xl font-bold text-white relative"
           >
-            See AI Code Review <br />
             <span className="bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
-              in Action
+              See AI Code Review in Action
             </span>
           </motion.h2>
 
@@ -149,7 +149,6 @@ export default function LandingPage() {
                   src="intro.mp4"
                   autoPlay
                   loop
-                  muted
                   controls
                   className="w-full h-full object-cover"
                 />
@@ -171,7 +170,10 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
             className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent"
           >
-            What is AI Code Reviewer?
+            <span className="bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
+
+              What is AI Code Reviewer?
+            </span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -214,7 +216,9 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
             className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent text-center"
           >
-            Core Features
+            <span className="bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
+              Core Features
+            </span>
           </motion.h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 mt-12 md:mt-16">
@@ -253,7 +257,9 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
             className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent text-center mb-4"
           >
-            How It Works
+            <span className="bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
+              How It Works
+            </span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -313,7 +319,9 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
             className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent mb-4"
           >
-            Integrates with Your Stack
+            <span className="bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
+              Integrates with Your Stack
+            </span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -346,7 +354,9 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
             className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent text-center mb-16"
           >
-            Loved by Developers
+            <span className="bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
+              Loved by Developers
+            </span>
           </motion.h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
@@ -385,7 +395,9 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
             className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent text-center mb-16"
           >
-            Frequently Asked Questions
+            <span className="bg-gradient-to-r from-emerald-300 via-white to-emerald-300 bg-clip-text text-transparent">
+              Frequently Asked Questions
+            </span>
           </motion.h2>
 
           <div className="space-y-4">

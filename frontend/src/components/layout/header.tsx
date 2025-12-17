@@ -34,15 +34,15 @@ const Header = () => {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "relative text-zinc-300 transition hover:text-white group",
+                  "relative text-white transition hover:text-emerald-400 group",
                   item.highlight &&
-                  "text-black bg-white px-4 py-2 rounded-md font-medium hover:bg-zinc-200 shadow-md"
+                  "group px-3 py-2 rounded-lg bg-emerald-400 text-black font-semibold hover:bg-emerald-300 transition-all duration-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-400/60 hover:shadow-2xl hover:scale-105 hover:text-black"
                 )}
               >
                 {!item.highlight && (
                   <>
                     {item.label}
-                    <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-white transition-all duration-300 group-hover:w-full" />
+                    <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-emerald-400 transition-all duration-300 group-hover:w-full" />
                   </>
                 )}
                 {item.highlight && item.label}
@@ -85,7 +85,7 @@ const Header = () => {
           ))}
         </div>
       </div>
-    </nav>
+    </nav >
   );
 };
 
