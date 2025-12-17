@@ -208,7 +208,8 @@ export default function DashboardLayout({
         <div className="border-t border-emerald-400/20 p-3">
           <div
             className={cn(
-              "flex items-center gap-3 p-2 rounded-lg border border-emerald-400/20 hover:border-emerald-400/40 hover:bg-zinc-900/50 transition-all duration-300",
+              "flex items-center gap-3 p-2 rounded-lg transition-all duration-300",
+              !collapsed && "border border-emerald-400/20 hover:border-emerald-400/40 hover:bg-zinc-900/50",
               collapsed && "justify-center"
             )}
           >
