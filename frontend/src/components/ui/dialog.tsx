@@ -31,7 +31,7 @@ const Dialog = ({ open, onOpenChange, children }: DialogProps) => {
   if (!open || !mounted) return null;
 
   return ReactDOM.createPortal(
-    <div className="fixed inset-0 z-[9999]">
+    <div className="fixed inset-0 z-[99]">
       <div 
         className="absolute inset-0 bg-black/80 backdrop-blur-xl"
         onClick={() => onOpenChange(false)}
