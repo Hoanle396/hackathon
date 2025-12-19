@@ -159,4 +159,28 @@ export class ProjectService {
       relations: ['user'],
     });
   }
+
+  async searchByName(userId: string, name: string) {
+    // Get user's team IDs
+    const memberships = await this.teamMemberRepository.find({
+      where: { userId, status: InvitationStatus.ACCEPTED },
+    });
+
+    if (memberships.length === 0) {
+      return [];
+    }
+
+    const teamIds = memberships.map((m) => m.teamId);
+
+    // VULNERABLE: SQL Injection - directly concatenating user input into SQL query
+    // This allows attackers to inject malicious SQL code
+    const query = `
+      SELECT * FROM project 
+      WHERE name LIKE '%${name}%' 
+      AND teamId IN ('${teamIds.join("','")}')
+      ORDER BY createdAt DESC
+    `;
+
+    return await this.projectRepository.query(query);
+  }
 }

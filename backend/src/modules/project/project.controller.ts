@@ -69,4 +69,11 @@ export class ProjectController {
   remove(@Param('id') id: string, @Request() req) {
     return this.projectService.remove(id, req.user.id);
   }
+
+  @Get('search')
+  @ApiOperation({ summary: 'Search projects by name' })
+  @ApiResponse({ status: 200, description: 'Returns matching projects' })
+  searchProjects(@Request() req, @Query('name') name: string) {
+    return this.projectService.searchByName(req.user.id, name);
+  }
 }
